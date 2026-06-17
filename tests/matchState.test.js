@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { deriveEstado, isBloqueado } from '../src/lib/matchState.js'
+import { deriveEstado, isBloqueado, isBettingOpen } from '../src/lib/matchState.js'
 
 describe('deriveEstado', () => {
   it('source finished overrides everything', () =>
@@ -16,4 +16,16 @@ describe('isBloqueado', () => {
   it('programado is editable', () => expect(isBloqueado('programado')).toBe(false))
   it('en_vivo is locked', () => expect(isBloqueado('en_vivo')).toBe(true))
   it('finalizado is locked', () => expect(isBloqueado('finalizado')).toBe(true))
+})
+
+describe('isBettingOpen', () => {
+  const now = Date.UTC(2026, 5, 17, 22, 0, 0)
+  it('open when programado and kickoff in the future', () =>
+    expect(isBettingOpen({ estado: 'programado', fecha: '2026-06-18T16:00:00Z' }, now)).toBe(true))
+  it('closed when programado but kickoff already passed', () =>
+    expect(isBettingOpen({ estado: 'programado', fecha: '2026-06-17T16:00:00Z' }, now)).toBe(false))
+  it('closed when en_vivo', () =>
+    expect(isBettingOpen({ estado: 'en_vivo', fecha: '2026-06-20T16:00:00Z' }, now)).toBe(false))
+  it('closed when finalizado', () =>
+    expect(isBettingOpen({ estado: 'finalizado', fecha: '2026-06-20T16:00:00Z' }, now)).toBe(false))
 })

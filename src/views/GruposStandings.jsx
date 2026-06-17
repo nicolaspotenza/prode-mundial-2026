@@ -1,8 +1,8 @@
 import { useMemo, useState } from 'react'
 import { GRUPOS } from '../data/groups.js'
-import { flag } from '../data/teams.js'
 import { computeStandings } from '../lib/standings.js'
 import { useStored } from '../hooks/useStored.js'
+import Flag from '../components/Flag.jsx'
 
 const GRUPO_IDS = Object.keys(GRUPOS)
 
@@ -48,8 +48,10 @@ export default function GruposStandings({ tick }) {
                 <tr key={r.equipo} className={`border-b border-white/5 last:border-0 ${zone}`}>
                   <td className="py-2 pl-3 text-white/50">{i + 1}</td>
                   <td className="py-2">
-                    <span className="mr-1.5">{flag(r.equipo)}</span>
-                    <span className="font-medium">{r.equipo}</span>
+                    <span className="flex items-center gap-1.5">
+                      <Flag team={r.equipo} className="h-3.5 w-5" />
+                      <span className="font-medium">{r.equipo}</span>
+                    </span>
                   </td>
                   <td className="py-2 text-center text-white/70">{r.pj}</td>
                   <td className="py-2 text-center text-white/70">{r.dg > 0 ? `+${r.dg}` : r.dg}</td>

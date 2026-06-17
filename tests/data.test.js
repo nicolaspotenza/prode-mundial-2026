@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest'
 import { GRUPOS } from '../src/data/groups.js'
 import { TEAMS } from '../src/data/teams.js'
 import { FIXTURES } from '../src/data/fixtures.js'
-import { BRACKET } from '../src/data/bracket.js'
+import { QUALIFIER_SLOTS } from '../src/data/bracket.js'
 
 describe('static data', () => {
   it('12 groups of 4', () => {
@@ -26,10 +26,12 @@ describe('static data', () => {
       ids.add(m.id)
     })
   })
-  it('bracket has all rounds from dieciseisavos to final', () => {
-    const rondas = new Set(BRACKET.map((s) => s.ronda))
-    ;['dieciseisavos', 'octavos', 'cuartos', 'semis', 'final'].forEach((r) => expect(rondas.has(r)).toBe(true))
-    expect(BRACKET.filter((s) => s.ronda === 'dieciseisavos').length).toBe(16)
-    expect(BRACKET.filter((s) => s.ronda === 'final').length).toBe(1)
+  it('qualifier slots: 2 per group (24 total), each in a known group', () => {
+    expect(QUALIFIER_SLOTS.length).toBe(24)
+    QUALIFIER_SLOTS.forEach((s) => {
+      expect(GRUPOS[s.grupo]).toBeTruthy()
+      expect([1, 2]).toContain(s.posicion)
+    })
+    expect(new Set(QUALIFIER_SLOTS.map((s) => s.id)).size).toBe(24)
   })
 })

@@ -1,35 +1,48 @@
 import { motion } from 'framer-motion'
-import { flag } from '../data/teams.js'
-import { isBloqueado } from '../lib/matchState.js'
+import { isBettingOpen } from '../lib/matchState.js'
+import Flag from './Flag.jsx'
 import LiveBadge from './LiveBadge.jsx'
 import ScoreInput from './ScoreInput.jsx'
 
-const ESTADO_CHIP = {
-  programado: { dot: 'bg-white/30', label: '' },
-  en_vivo: { dot: 'bg-danger', label: '' },
-  finalizado: { dot: 'bg-pitch', label: 'Final' },
-}
-
 export default function MatchCard({ match, prediction, onPredict, onOpen }) {
-  const locked = isBloqueado(match.estado)
+  const open = isBettingOpen(match)
   const hasPred = prediction?.pronosticoA != null && prediction?.pronosticoB != null
-  const chipColor = !hasPred && !locked ? 'bg-white/30' : ESTADO_CHIP[match.estado]?.dot
+  const showOfficial = match.estado === 'en_vivo' || match.estado === 'finalizado'
+
+  // dot de estado
+  const dot =
+    match.estado === 'en_vivo'
+      ? 'bg-danger'
+      : match.estado === 'finalizado'
+        ? 'bg-pitch'
+        : open
+          ? hasPred
+            ? 'bg-trophy'
+            : 'bg-white/30'
+          : 'bg-white/40'
+
+  // texto de estado (izquierda)
+  const statusText =
+    match.estado === 'finalizado'
+      ? 'Final'
+      : match.estado === 'en_vivo'
+        ? ''
+        : open
+          ? hasPred
+            ? 'Pronóstico cargado'
+            : 'Sin pronóstico'
+          : 'Apuestas cerradas'
 
   return (
     <div className="rounded-2xl border border-white/[0.08] bg-surface p-3 shadow-lg shadow-black/20">
-      {/* fila de estado: tocar abre el detalle */}
       <button
         type="button"
         onClick={onOpen}
         className="mb-2 flex w-full items-center justify-between text-xs text-white/50"
       >
         <span className="flex items-center gap-1.5">
-          <span className={`h-2 w-2 rounded-full ${chipColor}`} />
-          {!hasPred && !locked
-            ? 'Sin pronóstico'
-            : hasPred && !locked
-              ? 'Pronóstico cargado'
-              : ESTADO_CHIP[match.estado]?.label}
+          <span className={`h-2 w-2 rounded-full ${dot}`} />
+          {statusText}
         </span>
         {match.estado === 'en_vivo' && <LiveBadge minuto={match.minuto} />}
         {match.estado === 'finalizado' && prediction?.puntos != null && (
@@ -38,6 +51,7 @@ export default function MatchCard({ match, prediction, onPredict, onOpen }) {
         {match.estado === 'programado' && (
           <span className="text-white/40">
             {new Date(match.fecha).toLocaleString('es-AR', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })}
+            {!open && ' · a jugarse'}
           </span>
         )}
       </button>
@@ -50,22 +64,11 @@ export default function MatchCard({ match, prediction, onPredict, onOpen }) {
           className="flex flex-1 items-center gap-2 truncate text-left"
           aria-label={`Ver detalle de ${match.equipoA} vs ${match.equipoB}`}
         >
-          <span className="text-xl">{flag(match.equipoA)}</span>
+          <Flag team={match.equipoA} className="h-5 w-7" />
           <span className="truncate font-head text-base font-semibold">{match.equipoA}</span>
         </motion.button>
 
-        {locked ? (
-          <button
-            type="button"
-            onClick={onOpen}
-            className="px-2 font-head text-2xl font-bold tabular-nums"
-            aria-label="Ver detalle"
-          >
-            {match.resultadoA ?? '-'}
-            <span className="mx-1 text-white/40">:</span>
-            {match.resultadoB ?? '-'}
-          </button>
-        ) : (
+        {open ? (
           <div
             className="flex items-center gap-1 px-1"
             onClick={(e) => e.stopPropagation()}
@@ -74,17 +77,41 @@ export default function MatchCard({ match, prediction, onPredict, onOpen }) {
             <ScoreInput
               label={`Goles ${match.equipoA}`}
               value={prediction?.pronosticoA ?? null}
-              disabled={locked}
+              disabled={false}
               onChange={(v) => onPredict(v, prediction?.pronosticoB ?? null)}
             />
             <span className="text-white/40">:</span>
             <ScoreInput
               label={`Goles ${match.equipoB}`}
               value={prediction?.pronosticoB ?? null}
-              disabled={locked}
+              disabled={false}
               onChange={(v) => onPredict(prediction?.pronosticoA ?? null, v)}
             />
           </div>
+        ) : (
+          <button
+            type="button"
+            onClick={onOpen}
+            className="flex flex-col items-center px-2"
+            aria-label="Ver detalle"
+          >
+            <span className="font-head text-2xl font-bold tabular-nums">
+              {showOfficial ? (
+                <>
+                  {match.resultadoA ?? 0}
+                  <span className="mx-1 text-white/40">:</span>
+                  {match.resultadoB ?? 0}
+                </>
+              ) : (
+                <span className="text-white/30">— : —</span>
+              )}
+            </span>
+            {!showOfficial && hasPred && (
+              <span className="text-[11px] text-white/40">
+                tu pron.: {prediction.pronosticoA}:{prediction.pronosticoB}
+              </span>
+            )}
+          </button>
         )}
 
         <motion.button
@@ -95,7 +122,7 @@ export default function MatchCard({ match, prediction, onPredict, onOpen }) {
           aria-label={`Ver detalle de ${match.equipoA} vs ${match.equipoB}`}
         >
           <span className="truncate font-head text-base font-semibold">{match.equipoB}</span>
-          <span className="text-xl">{flag(match.equipoB)}</span>
+          <Flag team={match.equipoB} className="h-5 w-7" />
         </motion.button>
       </div>
     </div>

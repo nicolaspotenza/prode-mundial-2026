@@ -16,7 +16,7 @@ const TITLES = {
   home: 'Inicio',
   grupos: 'Tabla de Grupos',
   fase: 'Fase de Grupos',
-  llaves: 'Eliminatorias',
+  llaves: 'Clasificados',
   ranking: 'Ranking',
 }
 

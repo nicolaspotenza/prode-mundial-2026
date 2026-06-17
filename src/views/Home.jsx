@@ -28,7 +28,17 @@ export default function Home({ alias, tick, lastSync, onOpenMatch }) {
   }, [alias, tick])
 
   const now = new Date()
-  const today = useMemo(() => matches.filter((m) => sameDay(m.fecha, now)), [matches])
+  const today = useMemo(
+    () =>
+      matches
+        .filter((m) => sameDay(m.fecha, now))
+        .sort((a, b) => {
+          // en vivo primero, luego por horario
+          const live = (m) => (m.estado === 'en_vivo' ? 0 : 1)
+          return live(a) - live(b) || new Date(a.fecha) - new Date(b.fecha)
+        }),
+    [matches],
+  )
   const next = useMemo(() => {
     return matches
       .filter((m) => m.estado === 'programado' && new Date(m.fecha) > now)

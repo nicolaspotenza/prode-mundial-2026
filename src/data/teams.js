@@ -53,3 +53,60 @@ export const TEAMS = {
 export function flag(team) {
   return TEAMS[team] || '🏳️'
 }
+
+// Código ISO 3166-1 alpha-2 (o subdivisión gb-*) para imágenes de bandera (flagcdn).
+// Windows no renderiza emojis de bandera, por eso se usan imágenes reales.
+export const CODES = {
+  'México': 'mx',
+  'Sudáfrica': 'za',
+  'República de Corea': 'kr',
+  'Chequia': 'cz',
+  'Canadá': 'ca',
+  'Bosnia y Herzegovina': 'ba',
+  'Catar': 'qa',
+  'Suiza': 'ch',
+  'Brasil': 'br',
+  'Marruecos': 'ma',
+  'Haití': 'ht',
+  'Escocia': 'gb-sct',
+  'Estados Unidos': 'us',
+  'Paraguay': 'py',
+  'Australia': 'au',
+  'Turquía': 'tr',
+  'Alemania': 'de',
+  'Curazao': 'cw',
+  'Costa de Marfil': 'ci',
+  'Ecuador': 'ec',
+  'Países Bajos': 'nl',
+  'Japón': 'jp',
+  'Suecia': 'se',
+  'Túnez': 'tn',
+  'Bélgica': 'be',
+  'Egipto': 'eg',
+  'Irán': 'ir',
+  'Nueva Zelanda': 'nz',
+  'España': 'es',
+  'Cabo Verde': 'cv',
+  'Arabia Saudita': 'sa',
+  'Uruguay': 'uy',
+  'Francia': 'fr',
+  'Senegal': 'sn',
+  'Irak': 'iq',
+  'Noruega': 'no',
+  'Argentina': 'ar',
+  'Argelia': 'dz',
+  'Austria': 'at',
+  'Jordania': 'jo',
+  'Portugal': 'pt',
+  'DR Congo': 'cd',
+  'Uzbekistán': 'uz',
+  'Colombia': 'co',
+  'Inglaterra': 'gb-eng',
+  'Croacia': 'hr',
+  'Ghana': 'gh',
+  'Panamá': 'pa',
+}
+
+export function flagCode(team) {
+  return CODES[team] || null
+}

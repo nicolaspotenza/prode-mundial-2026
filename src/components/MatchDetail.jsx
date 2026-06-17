@@ -1,10 +1,10 @@
 import { useEffect, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { X } from 'lucide-react'
-import { flag } from '../data/teams.js'
 import { isBloqueado } from '../lib/matchState.js'
 import { useStored } from '../hooks/useStored.js'
 import { getGroupPredictions } from '../lib/predictions.js'
+import Flag from './Flag.jsx'
 import LiveBadge from './LiveBadge.jsx'
 
 function EventRow({ ev }) {
@@ -61,7 +61,7 @@ export default function MatchDetail({ match, alias, onClose }) {
 
           <div className="mb-3 flex items-center justify-between gap-2">
             <div className="flex flex-col items-center gap-1 flex-1">
-              <span className="text-3xl">{flag(match.equipoA)}</span>
+              <Flag team={match.equipoA} className="h-9 w-12" />
               <span className="text-center font-head font-semibold">{match.equipoA}</span>
             </div>
             <div className="text-center">
@@ -75,7 +75,7 @@ export default function MatchDetail({ match, alias, onClose }) {
               {match.estado === 'en_vivo' && <div className="mt-1"><LiveBadge minuto={match.minuto} /></div>}
             </div>
             <div className="flex flex-col items-center gap-1 flex-1">
-              <span className="text-3xl">{flag(match.equipoB)}</span>
+              <Flag team={match.equipoB} className="h-9 w-12" />
               <span className="text-center font-head font-semibold">{match.equipoB}</span>
             </div>
           </div>

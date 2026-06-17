@@ -1,27 +1,10 @@
-// Formato Mundial 2026: 32 clasificados (2 por grupo + 8 mejores terceros).
-// Rondas: Dieciseisavos (16) -> Octavos (8) -> Cuartos (4) -> Semis (2) -> Final (1).
-const RONDAS = [
-  ['dieciseisavos', 16],
-  ['octavos', 8],
-  ['cuartos', 4],
-  ['semis', 2],
-  ['final', 1],
-]
+import { GRUPOS } from './groups.js'
 
-export const BRACKET = RONDAS.flatMap(([ronda, count]) =>
-  Array.from({ length: count }, (_, i) => ({
-    id: `${ronda}_${i + 1}`,
-    fase: 'eliminatorias',
-    ronda,
-    posicion: i + 1,
-    equipoClasificado: null,
-  })),
-)
+// Clasificados por grupo: el usuario predice el 1° y 2° de cada grupo (los que avanzan).
+// La predicción se limita a los 4 equipos del grupo. 12 grupos × 2 = 24 slots.
+export const QUALIFIER_SLOTS = Object.keys(GRUPOS).flatMap((grupo) => [
+  { id: `pos_${grupo}_1`, fase: 'eliminatorias', grupo, posicion: 1, equipoClasificado: null },
+  { id: `pos_${grupo}_2`, fase: 'eliminatorias', grupo, posicion: 2, equipoClasificado: null },
+])
 
-export const RONDA_LABELS = {
-  dieciseisavos: 'Dieciseisavos',
-  octavos: 'Octavos',
-  cuartos: 'Cuartos',
-  semis: 'Semifinales',
-  final: 'Final',
-}
+export const POSICION_LABELS = { 1: '1° del grupo', 2: '2° del grupo' }
