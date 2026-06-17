@@ -1,0 +1,37 @@
+import { describe, it, expect, beforeEach } from 'vitest'
+import { storage } from '../src/lib/storage.js'
+import { recomputeGroupMatchForAllUsers, recomputeSlotForAllUsers } from '../src/lib/recalc.js'
+
+beforeEach(() => storage._resetForTests())
+
+describe('recomputeGroupMatchForAllUsers', () => {
+  it('awards points to every user with a prediction for the match', async () => {
+    await storage.set('users', [
+      { alias: 'Ana', puntosGrupos: 0, puntosEliminatorias: 0 },
+      { alias: 'Beto', puntosGrupos: 0, puntosEliminatorias: 0 },
+    ])
+    await storage.set('pronosticos_grupos:Ana', [{ matchId: 'm1', pronosticoA: 3, pronosticoB: 0, puntos: null }])
+    await storage.set('pronosticos_grupos:Beto', [{ matchId: 'm1', pronosticoA: 1, pronosticoB: 1, puntos: null }])
+
+    await recomputeGroupMatchForAllUsers('m1', 3, 0)
+
+    const ana = await storage.get('pronosticos_grupos:Ana')
+    const beto = await storage.get('pronosticos_grupos:Beto')
+    expect(ana[0].puntos).toBe(10)
+    expect(beto[0].puntos).toBe(0)
+    const users = await storage.get('users')
+    expect(users.find((u) => u.alias === 'Ana').puntosGrupos).toBe(10)
+  })
+})
+
+describe('recomputeSlotForAllUsers', () => {
+  it('awards knockout points to users who picked the advancing team', async () => {
+    await storage.set('users', [{ alias: 'Ana', puntosGrupos: 0, puntosEliminatorias: 0 }])
+    await storage.set('pronosticos_eliminatorias:Ana', [{ slotId: 's1', equipoElegido: 'Argentina', puntos: null }])
+
+    await recomputeSlotForAllUsers('s1', 'Argentina')
+
+    const users = await storage.get('users')
+    expect(users[0].puntosEliminatorias).toBe(10)
+  })
+})

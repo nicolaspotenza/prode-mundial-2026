@@ -1,0 +1,43 @@
+import { storage } from './storage.js'
+import { calcularPuntosGrupos, calcularPuntosEliminatoria } from './scoring.js'
+
+export async function recomputeGroupMatchForAllUsers(matchId, rA, rB) {
+  const users = (await storage.get('users')) || []
+  for (const u of users) {
+    const key = `pronosticos_grupos:${u.alias}`
+    const list = (await storage.get(key)) || []
+    const p = list.find((x) => x.matchId === matchId)
+    if (p) {
+      p.puntos = calcularPuntosGrupos(p.pronosticoA, p.pronosticoB, rA, rB)
+      await storage.set(key, list)
+    }
+  }
+  await recomputeUserTotals()
+}
+
+export async function recomputeSlotForAllUsers(slotId, equipoClasificado) {
+  const users = (await storage.get('users')) || []
+  for (const u of users) {
+    const key = `pronosticos_eliminatorias:${u.alias}`
+    const list = (await storage.get(key)) || []
+    const p = list.find((x) => x.slotId === slotId)
+    if (p) {
+      p.puntos = calcularPuntosEliminatoria(p.equipoElegido, equipoClasificado)
+      await storage.set(key, list)
+    }
+  }
+  await recomputeUserTotals()
+}
+
+export async function recomputeUserTotals() {
+  const users = (await storage.get('users')) || []
+  for (const u of users) {
+    const g = (await storage.get(`pronosticos_grupos:${u.alias}`)) || []
+    const e = (await storage.get(`pronosticos_eliminatorias:${u.alias}`)) || []
+    u.puntosGrupos = g.reduce((s, p) => s + (p.puntos || 0), 0)
+    u.puntosEliminatorias = e.reduce((s, p) => s + (p.puntos || 0), 0)
+    u.totalPuntos = u.puntosGrupos + u.puntosEliminatorias
+  }
+  await storage.set('users', users)
+  return users
+}
