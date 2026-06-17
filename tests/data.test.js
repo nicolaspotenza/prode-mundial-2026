@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest'
 import { GRUPOS } from '../src/data/groups.js'
 import { TEAMS } from '../src/data/teams.js'
 import { FIXTURES } from '../src/data/fixtures.js'
-import { QUALIFIER_SLOTS } from '../src/data/bracket.js'
+import { QUALIFIER_SLOTS, KO_SLOTS, ELIMINATION_SLOTS } from '../src/data/bracket.js'
 
 describe('static data', () => {
   it('12 groups of 4', () => {
@@ -33,5 +33,11 @@ describe('static data', () => {
       expect([1, 2]).toContain(s.posicion)
     })
     expect(new Set(QUALIFIER_SLOTS.map((s) => s.id)).size).toBe(24)
+  })
+  it('knockout slots: octavos..campeon (31 total) with unique ids', () => {
+    expect(KO_SLOTS.filter((s) => s.ronda === 'octavos').length).toBe(16)
+    expect(KO_SLOTS.filter((s) => s.ronda === 'campeon').length).toBe(1)
+    expect(KO_SLOTS.length).toBe(31)
+    expect(new Set(ELIMINATION_SLOTS.map((s) => s.id)).size).toBe(55)
   })
 })

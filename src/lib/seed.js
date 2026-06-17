@@ -1,6 +1,6 @@
 import { storage } from './storage.js'
 import { FIXTURES } from '../data/fixtures.js'
-import { QUALIFIER_SLOTS } from '../data/bracket.js'
+import { ELIMINATION_SLOTS } from '../data/bracket.js'
 
 // Siembra el storage compartido con los partidos y el bracket hardcodeados,
 // solo si aún no existen. La sincronización luego actualiza estos registros.
@@ -11,6 +11,6 @@ export async function ensureSeeded() {
   }
   const slots = await storage.get('elimination_slots')
   if (!slots || slots.length === 0) {
-    await storage.set('elimination_slots', QUALIFIER_SLOTS.map((s) => ({ ...s })))
+    await storage.set('elimination_slots', ELIMINATION_SLOTS.map((s) => ({ ...s })))
   }
 }
