@@ -45,9 +45,6 @@ export default function MatchCard({ match, prediction, onPredict, onOpen }) {
           {statusText}
         </span>
         {match.estado === 'en_vivo' && <LiveBadge minuto={match.minuto} />}
-        {match.estado === 'finalizado' && prediction?.puntos != null && (
-          <span className="font-semibold text-trophy">+{prediction.puntos} pts</span>
-        )}
         {match.estado === 'programado' && (
           <span className="text-white/40">
             {new Date(match.fecha).toLocaleString('es-AR', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })}
@@ -106,10 +103,19 @@ export default function MatchCard({ match, prediction, onPredict, onOpen }) {
                 <span className="text-white/30">— : —</span>
               )}
             </span>
-            {!showOfficial && hasPred && (
-              <span className="text-[11px] text-white/40">
-                tu pron.: {prediction.pronosticoA}:{prediction.pronosticoB}
+            {match.estado === 'finalizado' && prediction?.puntos != null ? (
+              <span
+                className={`mt-0.5 rounded-md px-1.5 text-[11px] font-bold
+                  ${prediction.puntos > 0 ? 'bg-trophy/20 text-trophy' : 'bg-white/10 text-white/50'}`}
+              >
+                +{prediction.puntos} pts
               </span>
+            ) : (
+              hasPred && (
+                <span className="text-[11px] text-white/40">
+                  tu pron.: {prediction.pronosticoA}:{prediction.pronosticoB}
+                </span>
+              )
             )}
           </button>
         )}

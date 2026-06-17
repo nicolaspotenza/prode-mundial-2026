@@ -37,11 +37,14 @@ La app usa el adaptador `src/lib/storage.js`:
 
 Configurables en `src/config.js` (`DATA_CONFIG`). Orden con degradación silenciosa:
 
-1. **Promiedos** (scraping vía proxy CORS) — fuente principal.
+1. **TheSportsDB** (`thesportsdb`) — fuente principal. Gratuita, con CORS habilitado, sin key obligatoria (usa la key pública `3`). Trae resultados reales del Mundial 2026 (liga 4429) por jornada.
 2. **API-Football** — fallback (requiere `apiFootballKey`).
 3. **football-data.org** — fallback (requiere `footballDataKey`).
+4. **Promiedos** (scraping vía proxy CORS) — último recurso.
 
-Las API keys se cargan en `src/config.js`. Sin keys, los fallbacks se omiten y la app funciona con lo que devuelva Promiedos (o queda en espera sin error).
+Los nombres de equipo llegan en inglés y se normalizan a los nombres en español de la app (`src/data/aliases.js`), así que el matching funciona sin importar el idioma ni el orden local/visitante.
+
+> **Cobertura:** la key pública gratuita de TheSportsDB está limitada (devuelve ~5 partidos por jornada). Para cobertura completa, cargá una key premium de TheSportsDB o una key de **API-Football** (free tier, 100 req/día) en `src/config.js` — el mismo pipeline la usa automáticamente.
 
 ## Documentación de diseño
 

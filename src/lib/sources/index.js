@@ -1,4 +1,5 @@
 import { DATA_CONFIG } from '../../config.js'
+import { fetchSportsDB } from './thesportsdb.js'
 import { fetchPromiedos } from './promiedos.js'
 import { fetchApiFootball } from './apiFootball.js'
 import { fetchFootballData } from './footballData.js'
@@ -19,10 +20,11 @@ export async function syncWithSources(sources) {
 
 export function defaultSources() {
   const map = {
+    thesportsdb: fetchSportsDB,
     promiedos: fetchPromiedos,
     'api-football': fetchApiFootball,
     'football-data': fetchFootballData,
   }
-  const order = [DATA_CONFIG.primarySource, 'promiedos', 'api-football', 'football-data']
+  const order = [DATA_CONFIG.primarySource, 'thesportsdb', 'api-football', 'football-data', 'promiedos']
   return [...new Set(order)].map((k) => map[k]).filter(Boolean)
 }

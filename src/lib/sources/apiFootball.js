@@ -20,25 +20,15 @@ export async function fetchApiFootball() {
     const data = await res.json()
     if (!data?.response?.length) return null
     return data.response.map((f) => ({
-      promiedosId: slugFromTeams(f.teams?.home?.name, f.teams?.away?.name),
+      home: f.teams?.home?.name,
+      away: f.teams?.away?.name,
       status: mapStatus(f.fixture?.status?.short),
-      rA: f.goals?.home ?? 0,
-      rB: f.goals?.away ?? 0,
+      rA: f.goals?.home ?? null,
+      rB: f.goals?.away ?? null,
       minuto: f.fixture?.status?.elapsed ?? null,
       eventos: [],
     }))
   } catch {
     return null
   }
-}
-
-function slugFromTeams(a, b) {
-  const s = (x) =>
-    (x || '')
-      .toLowerCase()
-      .normalize('NFD')
-      .replace(/[̀-ͯ]/g, '')
-      .replace(/[^a-z0-9]+/g, '-')
-      .replace(/^-|-$/g, '')
-  return `${s(a)}-vs-${s(b)}`
 }

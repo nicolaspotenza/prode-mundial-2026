@@ -18,25 +18,15 @@ export async function fetchFootballData() {
     const data = await res.json()
     if (!data?.matches?.length) return null
     return data.matches.map((m) => ({
-      promiedosId: slugFromTeams(m.homeTeam?.name, m.awayTeam?.name),
+      home: m.homeTeam?.name,
+      away: m.awayTeam?.name,
       status: mapStatus(m.status),
-      rA: m.score?.fullTime?.home ?? 0,
-      rB: m.score?.fullTime?.away ?? 0,
+      rA: m.score?.fullTime?.home ?? null,
+      rB: m.score?.fullTime?.away ?? null,
       minuto: null,
       eventos: [],
     }))
   } catch {
     return null
   }
-}
-
-function slugFromTeams(a, b) {
-  const s = (x) =>
-    (x || '')
-      .toLowerCase()
-      .normalize('NFD')
-      .replace(/[̀-ͯ]/g, '')
-      .replace(/[^a-z0-9]+/g, '-')
-      .replace(/^-|-$/g, '')
-  return `${s(a)}-vs-${s(b)}`
 }
