@@ -56,7 +56,7 @@ describe('fetchSportsDB', () => {
     const out = await fetchSportsDB(fakeFetch)
     expect(out).toHaveLength(1)
     expect(out[0].home).toBe('Mexico')
-    expect(fakeFetch).toHaveBeenCalledTimes(3) // rounds 1,2,3
+    expect(fakeFetch).toHaveBeenCalledTimes(4) // eventsseason + rounds 1,2,3
   })
   it('returns null when nothing comes back', async () => {
     const fakeFetch = vi.fn(async () => ({ ok: true, json: async () => ({ events: [] }) }))

@@ -9,7 +9,7 @@ function mapStatus(status) {
 // Fallback 2: football-data.org. Requiere API key gratuita.
 export async function fetchFootballData() {
   const key = DATA_CONFIG.footballDataKey
-  if (!key || key === 'TU_API_KEY_AQUI') return null
+  if (!key) return null
   try {
     const res = await fetch('https://api.football-data.org/v4/competitions/WC/matches', {
       headers: { 'X-Auth-Token': key },

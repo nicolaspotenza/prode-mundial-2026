@@ -1,6 +1,8 @@
+import { DATA_CONFIG } from '../../config.js'
+
 // Fuente principal: TheSportsDB (gratuita, CORS habilitado). Liga 4429 = FIFA World Cup.
-// Trae resultados reales por ronda (jornadas de grupos 1-3). Status real en strStatus.
-const KEY = '3'
+// La key gratuita está capada por endpoint, así que se combinan varios (season + rondas)
+// y se deduplica por idEvent para maximizar la cobertura sin key premium.
 const LEAGUE = 4429
 const SEASON = '2026'
 
@@ -27,26 +29,36 @@ function mapEvent(e) {
   }
 }
 
-export async function fetchSportsDB(fetchImpl = fetch) {
+async function fetchJson(fetchImpl, url) {
   try {
-    const all = []
-    const seen = new Set()
-    for (const r of [1, 2, 3]) {
-      const res = await fetchImpl(
-        `https://www.thesportsdb.com/api/v1/json/${KEY}/eventsround.php?id=${LEAGUE}&r=${r}&s=${SEASON}`,
-      )
-      if (!res || !res.ok) continue
-      const data = await res.json()
-      for (const e of data.events || []) {
-        if (seen.has(e.idEvent)) continue
-        seen.add(e.idEvent)
-        if (e.strHomeTeam && e.strAwayTeam) all.push(mapEvent(e))
-      }
-    }
-    return all.length ? all : null
+    const r = await fetchImpl(url)
+    if (!r || !r.ok) return null
+    return await r.json()
   } catch {
     return null
   }
+}
+
+export async function fetchSportsDB(fetchImpl = fetch) {
+  const key = DATA_CONFIG.thesportsdbKey || '123'
+  const base = `https://www.thesportsdb.com/api/v1/json/${key}`
+  const urls = [
+    `${base}/eventsseason.php?id=${LEAGUE}&s=${SEASON}`,
+    `${base}/eventsround.php?id=${LEAGUE}&r=1&s=${SEASON}`,
+    `${base}/eventsround.php?id=${LEAGUE}&r=2&s=${SEASON}`,
+    `${base}/eventsround.php?id=${LEAGUE}&r=3&s=${SEASON}`,
+  ]
+  const all = []
+  const seen = new Set()
+  for (const u of urls) {
+    const data = await fetchJson(fetchImpl, u)
+    for (const e of data?.events || []) {
+      if (seen.has(e.idEvent)) continue
+      seen.add(e.idEvent)
+      if (e.strHomeTeam && e.strAwayTeam) all.push(mapEvent(e))
+    }
+  }
+  return all.length ? all : null
 }
 
 // Exportado para tests de parseo.

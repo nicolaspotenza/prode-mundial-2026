@@ -11,7 +11,7 @@ function mapStatus(short) {
 // Fallback 1: API-Football (RapidAPI / api-sports). Requiere API key gratuita.
 export async function fetchApiFootball() {
   const key = DATA_CONFIG.apiFootballKey
-  if (!key || key === 'TU_API_KEY_AQUI') return null
+  if (!key) return null
   try {
     const res = await fetch('https://v3.football.api-sports.io/fixtures?league=1&season=2026', {
       headers: { 'x-apisports-key': key },

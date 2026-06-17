@@ -25,6 +25,13 @@ export function defaultSources() {
     'api-football': fetchApiFootball,
     'football-data': fetchFootballData,
   }
-  const order = [DATA_CONFIG.primarySource, 'thesportsdb', 'api-football', 'football-data', 'promiedos']
+  // Si hay una key de API/footaball-data configurada, esa fuente pasa a ser primaria
+  // (cobertura completa). Si no, se usa la fuente principal por defecto (TheSportsDB).
+  const preferred = DATA_CONFIG.apiFootballKey
+    ? 'api-football'
+    : DATA_CONFIG.footballDataKey
+      ? 'football-data'
+      : DATA_CONFIG.primarySource
+  const order = [preferred, 'thesportsdb', 'api-football', 'football-data', 'promiedos']
   return [...new Set(order)].map((k) => map[k]).filter(Boolean)
 }

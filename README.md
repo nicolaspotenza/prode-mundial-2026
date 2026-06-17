@@ -44,7 +44,18 @@ Configurables en `src/config.js` (`DATA_CONFIG`). Orden con degradación silenci
 
 Los nombres de equipo llegan en inglés y se normalizan a los nombres en español de la app (`src/data/aliases.js`), así que el matching funciona sin importar el idioma ni el orden local/visitante.
 
-> **Cobertura:** la key pública gratuita de TheSportsDB está limitada (devuelve ~5 partidos por jornada). Para cobertura completa, cargá una key premium de TheSportsDB o una key de **API-Football** (free tier, 100 req/día) en `src/config.js` — el mismo pipeline la usa automáticamente.
+### Cobertura completa (opcional)
+
+Combinando endpoints, TheSportsDB gratis suele devolver el **fixture completo + resultados** de todos los grupos. Si en algún momento rate-limita, podés garantizar cobertura total con API-Football:
+
+1. Registrate gratis en https://www.api-football.com/ (free tier: 100 req/día).
+2. Copiá `.env.example` a `.env` y pegá tu key:
+   ```
+   VITE_API_FOOTBALL_KEY=tu_key_aca
+   ```
+3. Reiniciá `npm run dev`.
+
+Al definir la key, **API-Football pasa a ser la fuente principal automáticamente** (cobertura completa) y TheSportsDB queda como fallback. Las keys nunca se commitean (`.env` está en `.gitignore`).
 
 ## Documentación de diseño
 
