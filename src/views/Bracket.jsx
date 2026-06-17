@@ -5,6 +5,7 @@ import { POSICION_LABELS, KO_RONDAS, RONDA_LABELS } from '../data/bracket.js'
 import { useStored } from '../hooks/useStored.js'
 import { getKnockoutPredictions, setKnockoutPrediction } from '../lib/predictions.js'
 import Flag from '../components/Flag.jsx'
+import ScoringInfo from '../components/ScoringInfo.jsx'
 
 const GRUPO_IDS = Object.keys(GRUPOS)
 
@@ -198,6 +199,8 @@ export default function Bracket({ alias, tick }) {
 
   return (
     <div className="space-y-3">
+      <ScoringInfo variant="eliminatorias" />
+
       {/* segmented toggle */}
       <div className="flex rounded-xl bg-surface p-1">
         {[

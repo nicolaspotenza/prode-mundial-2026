@@ -5,6 +5,7 @@ import { GRUPOS } from '../data/groups.js'
 import { useStored } from '../hooks/useStored.js'
 import { getGroupPredictions, setGroupPrediction } from '../lib/predictions.js'
 import MatchCard from '../components/MatchCard.jsx'
+import ScoringInfo from '../components/ScoringInfo.jsx'
 
 const GRUPO_IDS = Object.keys(GRUPOS)
 
@@ -48,6 +49,8 @@ export default function FaseGrupos({ alias, tick, onOpenMatch }) {
 
   return (
     <div className="space-y-3">
+      <ScoringInfo variant="grupos" />
+
       {/* chips de salto directo */}
       <div className="-mx-4 flex gap-1 overflow-x-auto px-4 pb-1">
         {GRUPO_IDS.map((g, i) => (

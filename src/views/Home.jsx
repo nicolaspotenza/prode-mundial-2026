@@ -4,6 +4,7 @@ import { CalendarDays } from 'lucide-react'
 import { useStored } from '../hooks/useStored.js'
 import { getGroupPredictions, setGroupPrediction } from '../lib/predictions.js'
 import MatchCard from '../components/MatchCard.jsx'
+import ScoringInfo from '../components/ScoringInfo.jsx'
 
 function sameDay(iso, ref) {
   const d = new Date(iso)
@@ -53,6 +54,8 @@ export default function Home({ alias, tick, lastSync, onOpenMatch }) {
 
   return (
     <div className="space-y-4">
+      <ScoringInfo variant="grupos" />
+
       <div className="flex items-center justify-between">
         <h2 className="flex items-center gap-2 font-head text-xl font-bold">
           <CalendarDays size={20} className="text-pitch" /> Partidos de hoy
