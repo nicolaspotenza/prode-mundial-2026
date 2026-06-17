@@ -2,6 +2,7 @@ import { useEffect, useState, useCallback, useRef } from 'react'
 import { DATA_CONFIG } from '../config.js'
 import { syncWithSources, defaultSources } from '../lib/sources/index.js'
 import { applySync } from '../lib/applySync.js'
+import { ensureSeeded } from '../lib/seed.js'
 import { storage } from '../lib/storage.js'
 
 export function useSync() {
@@ -13,6 +14,7 @@ export function useSync() {
   const runSync = useCallback(async () => {
     setSyncing(true)
     try {
+      await ensureSeeded()
       const updates = await syncWithSources(defaultSources())
       const { live } = await applySync(updates)
       setLastSync(await storage.get('last_sync'))
