@@ -17,6 +17,17 @@ function toInt(v) {
   return v == null || v === '' ? null : parseInt(v, 10)
 }
 
+// Hora real del kickoff en UTC ISO. TheSportsDB la trae en strTimestamp (UTC, sin zona)
+// o partida en dateEvent + strTime. Devuelve null si no hay dato.
+function kickoffISO(e) {
+  if (e.strTimestamp) {
+    const t = e.strTimestamp.trim().replace(' ', 'T')
+    return /[zZ]|[+-]\d{2}:?\d{2}$/.test(t) ? t : `${t}Z`
+  }
+  if (e.dateEvent && e.strTime) return `${e.dateEvent}T${e.strTime}Z`
+  return null
+}
+
 function mapEvent(e) {
   return {
     home: e.strHomeTeam,
@@ -26,6 +37,7 @@ function mapEvent(e) {
     rB: toInt(e.intAwayScore),
     minuto: e.strProgress || null,
     eventos: [],
+    fecha: kickoffISO(e),
   }
 }
 

@@ -25,6 +25,7 @@ export async function fetchFootballData() {
       rB: m.score?.fullTime?.away ?? null,
       minuto: null,
       eventos: [],
+      fecha: m.utcDate ?? null,
     }))
   } catch {
     return null

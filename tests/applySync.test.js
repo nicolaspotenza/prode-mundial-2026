@@ -5,8 +5,8 @@ import { applySync, findFixture } from '../src/lib/applySync.js'
 beforeEach(() => storage._resetForTests())
 
 const baseMatches = () => [
-  { id: 'g_A_0', equipoA: 'México', equipoB: 'Sudáfrica', resultadoA: null, resultadoB: null, estado: 'programado', minuto: null },
-  { id: 'g_K_0', equipoA: 'Portugal', equipoB: 'DR Congo', resultadoA: null, resultadoB: null, estado: 'programado', minuto: null },
+  { id: 'g_A_0', equipoA: 'México', equipoB: 'Sudáfrica', fecha: '2026-06-20T16:00:00Z', resultadoA: null, resultadoB: null, estado: 'programado', minuto: null },
+  { id: 'g_K_0', equipoA: 'Portugal', equipoB: 'DR Congo', fecha: '2026-06-20T16:00:00Z', resultadoA: null, resultadoB: null, estado: 'programado', minuto: null },
 ]
 
 describe('findFixture (canonical, language-agnostic, any order)', () => {
@@ -81,6 +81,27 @@ describe('applySync', () => {
     await applySync([{ home: 'Mexico', away: 'South Africa', status: 'finished', rA: 2, rB: 0, minuto: '90', eventos: [] }])
     const users = await storage.get('users')
     expect(users[0].puntosGrupos).toBe(10)
+  })
+
+  it('refines kickoff (fecha) for a scheduled match from the source', async () => {
+    await storage.set('matches', baseMatches())
+    await storage.set('users', [])
+    await applySync([
+      { home: 'Portugal', away: 'DR Congo', status: 'scheduled', rA: null, rB: null, minuto: null, eventos: [], fecha: '2026-06-17T22:00:00Z' },
+    ])
+    const m = (await storage.get('matches')).find((x) => x.id === 'g_K_0')
+    expect(m.fecha).toBe('2026-06-17T22:00:00Z')
+    expect(m.estado).toBe('programado')
+  })
+
+  it('keeps existing fecha when the source has no timestamp', async () => {
+    await storage.set('matches', baseMatches())
+    await storage.set('users', [])
+    await applySync([
+      { home: 'Portugal', away: 'DR Congo', status: 'scheduled', rA: null, rB: null, minuto: null, eventos: [] },
+    ])
+    const m = (await storage.get('matches')).find((x) => x.id === 'g_K_0')
+    expect(m.fecha).toBe('2026-06-20T16:00:00Z')
   })
 
   it('returns zeros for null updates', async () => {

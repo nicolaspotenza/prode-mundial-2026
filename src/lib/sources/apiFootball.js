@@ -27,6 +27,7 @@ export async function fetchApiFootball() {
       rB: f.goals?.away ?? null,
       minuto: f.fixture?.status?.elapsed ?? null,
       eventos: [],
+      fecha: f.fixture?.date ?? null,
     }))
   } catch {
     return null

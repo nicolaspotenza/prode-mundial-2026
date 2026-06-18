@@ -32,6 +32,10 @@ export async function applySync(updates) {
     const rA = swapped ? u.rB : u.rA
     const rB = swapped ? u.rA : u.rB
 
+    // Refina la hora del kickoff con el dato real de la fuente (las del fixture son
+    // aproximadas). Así las apuestas se cierran respecto al horario verdadero.
+    if (u.fecha) m.fecha = u.fecha
+
     if (u.status === 'live') {
       m.estado = 'en_vivo'
       m.resultadoA = rA

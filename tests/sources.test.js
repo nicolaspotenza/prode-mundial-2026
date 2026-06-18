@@ -35,12 +35,20 @@ describe('thesportsdb mapEvent', () => {
       strStatus: 'FT',
       strProgress: null,
     })
-    expect(out).toEqual({ home: 'Mexico', away: 'South Africa', status: 'finished', rA: 2, rB: 0, minuto: null, eventos: [] })
+    expect(out).toEqual({ home: 'Mexico', away: 'South Africa', status: 'finished', rA: 2, rB: 0, minuto: null, eventos: [], fecha: null })
   })
   it('null scores for not-started', () => {
     const out = mapEvent({ strHomeTeam: 'Canada', strAwayTeam: 'Qatar', intHomeScore: null, intAwayScore: null, strStatus: 'NS' })
     expect(out.rA).toBeNull()
     expect(out.status).toBe('scheduled')
+  })
+  it('captures kickoff from strTimestamp (normalized to UTC ISO)', () => {
+    const out = mapEvent({ strHomeTeam: 'A', strAwayTeam: 'B', strStatus: 'NS', strTimestamp: '2026-06-18T19:00:00' })
+    expect(out.fecha).toBe('2026-06-18T19:00:00Z')
+  })
+  it('falls back to dateEvent + strTime for kickoff', () => {
+    const out = mapEvent({ strHomeTeam: 'A', strAwayTeam: 'B', strStatus: 'NS', dateEvent: '2026-06-18', strTime: '19:00:00' })
+    expect(out.fecha).toBe('2026-06-18T19:00:00Z')
   })
 })
 

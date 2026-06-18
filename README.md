@@ -26,12 +26,23 @@ npm run build    # build de producción
 npm run preview  # previsualizar el build
 ```
 
-## Persistencia (`window.storage`)
+## Persistencia (`src/lib/storage.js`)
 
-La app usa el adaptador `src/lib/storage.js`:
+El adaptador elige el backend en este orden:
 
-- Si está disponible el `window.storage` del artifact de Claude (storage compartido entre usuarios), lo usa con `shared: true`.
-- Si no (ejecución standalone / GitHub / tests), cae a un shim respaldado por `localStorage`. Es solo para desarrollo: no comparte datos entre usuarios.
+1. **`window.storage`** del artifact de Claude, si está presente (compartido entre usuarios).
+2. **API remota `/api/storage`** (Upstash Redis) cuando corre en producción (`import.meta.env.PROD`). Da **ranking y pronósticos compartidos entre todos los celulares**. Si el backend no está configurado o no responde, degrada al shim local (la app sigue andando por dispositivo).
+3. **Shim sobre `localStorage`** en desarrollo local y tests (por dispositivo).
+
+### Ranking compartido en producción (Upstash Redis)
+
+La función serverless [`api/storage.js`](./api/storage.js) expone `GET/POST /api/storage` y guarda los valores en Upstash Redis vía su API REST. Para activarlo:
+
+1. En el proyecto de Vercel: **Storage → Create / Marketplace → Upstash for Redis** (o `npx vercel integration add upstash`). Conectalo al proyecto `prode-mundial-2026`.
+2. La integración inyecta automáticamente `KV_REST_API_URL` / `KV_REST_API_TOKEN` (o `UPSTASH_REDIS_REST_URL` / `_TOKEN`). La función acepta cualquiera de los dos pares.
+3. Redeploy (o push): el siguiente deploy ya usa el storage compartido.
+
+Hasta conectarlo, la app funciona igual pero el ranking es local por dispositivo.
 
 ## Fuentes de datos
 

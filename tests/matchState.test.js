@@ -20,8 +20,14 @@ describe('isBloqueado', () => {
 
 describe('isBettingOpen', () => {
   const now = Date.UTC(2026, 5, 17, 22, 0, 0)
-  it('open when programado and kickoff in the future', () =>
+  it('open when programado and kickoff more than 1h away', () =>
     expect(isBettingOpen({ estado: 'programado', fecha: '2026-06-18T16:00:00Z' }, now)).toBe(true))
+  it('open when kickoff just over 1h away', () =>
+    expect(isBettingOpen({ estado: 'programado', fecha: '2026-06-17T23:30:00Z' }, now)).toBe(true))
+  it('closed when kickoff is within 1h (cierra 1h antes)', () =>
+    expect(isBettingOpen({ estado: 'programado', fecha: '2026-06-17T22:30:00Z' }, now)).toBe(false))
+  it('closed exactly at the 1h boundary', () =>
+    expect(isBettingOpen({ estado: 'programado', fecha: '2026-06-17T23:00:00Z' }, now)).toBe(false))
   it('closed when programado but kickoff already passed', () =>
     expect(isBettingOpen({ estado: 'programado', fecha: '2026-06-17T16:00:00Z' }, now)).toBe(false))
   it('closed when en_vivo', () =>
