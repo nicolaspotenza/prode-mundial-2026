@@ -18,12 +18,14 @@ export function readLocalRaw(key) {
   }
 }
 
-// ¿Hay datos locales sin migrar? (current_user/users presentes y sin flag de migrado)
+// ¿Hay datos compartidos varados en el localStorage de este dispositivo, sin migrar?
+// OJO: `current_user` es device-local por diseño (siempre vive en localStorage), así que
+// NO cuenta como dato a migrar; lo que importa es `users` (que antes de Upstash quedaba
+// varado en el shim local). Sin él, todo dispositivo mostraría el botón para siempre.
 export function hasLocalData() {
   if (readLocalRaw(MIGRATED_FLAG)) return false
-  const u = readLocalRaw('current_user')
   const users = readLocalRaw('users')
-  return Boolean(u || (Array.isArray(users) && users.length))
+  return Boolean(Array.isArray(users) && users.length)
 }
 
 function markMigrated() {

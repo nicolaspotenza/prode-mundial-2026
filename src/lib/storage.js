@@ -2,6 +2,10 @@
 // 1. window.storage del artifact de Claude (compartido entre usuarios).
 // 2. API remota /api/storage (Upstash Redis) en producción → ranking compartido real.
 // 3. Shim sobre localStorage para desarrollo local y tests (por dispositivo).
+//
+// Clave: el parámetro `shared`. Las claves con `shared: false` (p. ej. `current_user`)
+// son DEVICE-LOCAL: cada dispositivo guarda su propio alias y NUNCA viajan al backend
+// compartido. Si no, todos los celulares verían el mismo alias y los mismos datos.
 const hasArtifact =
   typeof window !== 'undefined' && window.storage && typeof window.storage.get === 'function'
 
@@ -10,7 +14,9 @@ const isProd =
 
 let mem = {}
 
-const shim = {
+// Almacén device-local: localStorage con prefijo `prode:` (con respaldo en memoria para
+// entornos sin localStorage). Es también el shim de desarrollo/tests.
+const local = {
   async set(key, value) {
     const s = JSON.stringify(value)
     mem[key] = s
@@ -31,6 +37,15 @@ const shim = {
     }
     return raw == null ? null : JSON.parse(raw)
   },
+}
+
+const shim = {
+  async set(key, value) {
+    await local.set(key, value)
+  },
+  async get(key) {
+    return local.get(key)
+  },
   _resetForTests() {
     mem = {}
     try {
@@ -45,8 +60,8 @@ const artifact = {
   async set(key, value, shared = true) {
     await window.storage.set(key, JSON.stringify(value), shared)
   },
-  async get(key) {
-    const d = await window.storage.get(key, true)
+  async get(key, shared = true) {
+    const d = await window.storage.get(key, shared)
     return d ? JSON.parse(d.value) : null
   },
   _resetForTests() {},
@@ -55,9 +70,11 @@ const artifact = {
 // Cliente de la API remota (Upstash vía función serverless). Inyectable para tests.
 // Si el backend no está configurado o no responde, degrada al `fallback` local (shim)
 // para que la app siga funcionando por dispositivo hasta conectar Upstash.
+// Las claves device-local (`shared: false`) van siempre al almacén local, nunca al backend.
 export function createRemoteStorage(fetchImpl = fetch, base = '/api/storage', fallback = null) {
   return {
-    async set(key, value) {
+    async set(key, value, shared = true) {
+      if (!shared) return local.set(key, value)
       try {
         const r = await fetchImpl(base, {
           method: 'POST',
@@ -70,7 +87,8 @@ export function createRemoteStorage(fetchImpl = fetch, base = '/api/storage', fa
       }
       if (fallback) await fallback.set(key, value)
     },
-    async get(key) {
+    async get(key, shared = true) {
+      if (!shared) return local.get(key)
       try {
         const r = await fetchImpl(`${base}?key=${encodeURIComponent(key)}`)
         if (r && r.ok) {

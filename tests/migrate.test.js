@@ -5,9 +5,26 @@ import {
   mergeByKey,
   rescoreGroupPreds,
   migrateLocalToRemote,
+  hasLocalData,
 } from '../src/lib/migrate.js'
 
 beforeEach(() => storage._resetForTests())
+
+describe('hasLocalData', () => {
+  it('is false when only current_user is local (device-local alias is not stranded data)', () => {
+    localStorage.setItem('prode:current_user', JSON.stringify('Ana'))
+    expect(hasLocalData()).toBe(false)
+  })
+  it('is true when stranded shared data (users) lives in localStorage', () => {
+    localStorage.setItem('prode:users', JSON.stringify([{ alias: 'Ana' }]))
+    expect(hasLocalData()).toBe(true)
+  })
+  it('is false once the migrated flag is set', () => {
+    localStorage.setItem('prode:users', JSON.stringify([{ alias: 'Ana' }]))
+    localStorage.setItem('prode:migrated', JSON.stringify(true))
+    expect(hasLocalData()).toBe(false)
+  })
+})
 
 describe('mergeUsers', () => {
   it('keeps remote users and appends locals not present', () => {

@@ -1,5 +1,7 @@
-import { describe, it, expect, vi } from 'vitest'
-import { createRemoteStorage } from '../src/lib/storage.js'
+import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { createRemoteStorage, storage } from '../src/lib/storage.js'
+
+beforeEach(() => storage._resetForTests())
 
 describe('createRemoteStorage', () => {
   it('set POSTs key+value as JSON to the API', async () => {
@@ -54,6 +56,24 @@ describe('createRemoteStorage', () => {
     const remote = createRemoteStorage(fetchImpl, '/api/storage', fallback)
     await remote.set('users', [{ alias: 'Remote' }])
     expect(await fallback.get('users')).toBeNull()
+  })
+
+  // El alias de cada dispositivo (current_user) es device-local: NUNCA debe ir al backend
+  // compartido, o todos los celulares verían el mismo alias y los mismos datos.
+  it('keeps shared:false keys on the device and never hits the backend', async () => {
+    const fetchImpl = vi.fn(async () => ({ ok: true, json: async () => ({ ok: true }) }))
+    const remote = createRemoteStorage(fetchImpl, '/api/storage')
+    await remote.set('current_user', 'Ana', false)
+    expect(fetchImpl).not.toHaveBeenCalled()
+    expect(await remote.get('current_user', false)).toBe('Ana')
+    expect(fetchImpl).not.toHaveBeenCalled()
+  })
+
+  it('still routes shared keys (default) to the backend', async () => {
+    const fetchImpl = vi.fn(async () => ({ ok: true, json: async () => ({ value: ['x'] }) }))
+    const remote = createRemoteStorage(fetchImpl, '/api/storage')
+    await remote.get('users')
+    expect(fetchImpl).toHaveBeenCalledTimes(1)
   })
 })
 

@@ -24,8 +24,9 @@ botón para **mudar sus datos locales al backend compartido**.
 ### `src/lib/migrate.js` (lógica, testeada)
 
 - `readLocalRaw(key)` — lee `localStorage['prode:'+key]` con parse seguro (null si falta).
-- `hasLocalData()` — `true` si hay `current_user`/`users` local y no existe el flag
-  `prode:migrated`.
+- `hasLocalData()` — `true` si hay `users` varado en localStorage y no existe el flag
+  `prode:migrated`. (No mira `current_user`: ese es device-local por diseño y siempre vive
+  en localStorage, así que no es un dato a migrar.)
 - `mergeUsers(remote, local)` — pura. Mantiene los usuarios del backend por `alias`;
   agrega los locales cuyo alias no esté en el backend.
 - `mergeByKey(remote, local, keyField)` — pura. Arranca del backend; agrega solo los

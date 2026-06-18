@@ -21,7 +21,7 @@ export async function registerOrSelectAlias(alias) {
     users.push(user)
     await storage.set('users', users)
   }
-  await storage.set('current_user', user.alias)
+  await storage.set('current_user', user.alias, false)
   return user
 }
 
@@ -29,7 +29,7 @@ export function useCurrentUser() {
   const [alias, setAlias] = useState(undefined) // undefined = cargando, null = sin alias
 
   useEffect(() => {
-    storage.get('current_user').then((a) => setAlias(a ?? null))
+    storage.get('current_user', false).then((a) => setAlias(a ?? null))
   }, [])
 
   const register = async (a) => {
@@ -38,7 +38,7 @@ export function useCurrentUser() {
     return u
   }
   const change = async () => {
-    await storage.set('current_user', null)
+    await storage.set('current_user', null, false)
     setAlias(null)
   }
 
