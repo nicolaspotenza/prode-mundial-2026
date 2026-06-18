@@ -60,13 +60,58 @@ describe('applySync', () => {
 
   it('marks live match locked', async () => {
     await storage.set('matches', baseMatches())
-    const { live } = await applySync([
-      { home: 'Portugal', away: 'DR Congo', status: 'live', rA: 1, rB: 0, minuto: "55'", eventos: [] },
-    ])
+    // now justo después del kickoff: el partido NO es stale, sigue en vivo.
+    const now = Date.parse('2026-06-20T16:05:00Z')
+    const { live } = await applySync(
+      [{ home: 'Portugal', away: 'DR Congo', status: 'live', rA: 1, rB: 0, minuto: "55'", eventos: [] }],
+      now,
+    )
     expect(live).toBe(1)
     const m = (await storage.get('matches')).find((x) => x.id === 'g_K_0')
     expect(m.estado).toBe('en_vivo')
     expect(m.resultadoA).toBe(1)
+  })
+
+  it('auto-finalizes a match stuck live past the max duration, with the last score', async () => {
+    const matches = baseMatches()
+    matches[1].estado = 'en_vivo' // g_K_0 Portugal vs DR Congo, ya en vivo
+    matches[1].resultadoA = 1
+    matches[1].resultadoB = 1
+    matches[1].fecha = '2026-06-18T16:00:00Z'
+    await storage.set('matches', matches)
+    await storage.set('users', [{ alias: 'Ana', puntosGrupos: 0, puntosEliminatorias: 0 }])
+    await storage.set('pronosticos_grupos:Ana', [{ matchId: 'g_K_0', pronosticoA: 1, pronosticoB: 1, puntos: null }])
+
+    // La fuente sigue colgada reportándolo en vivo (2H) 3h después del kickoff.
+    const now = Date.parse('2026-06-18T19:00:00Z')
+    const { live, finished } = await applySync(
+      [{ home: 'Portugal', away: 'DR Congo', status: 'live', rA: 1, rB: 1, minuto: "90'", eventos: [] }],
+      now,
+    )
+
+    const m = (await storage.get('matches')).find((x) => x.id === 'g_K_0')
+    expect(m.estado).toBe('finalizado')
+    expect(live).toBe(0) // ya no cuenta como en vivo → corta el re-poll adaptativo
+    expect(finished).toBe(1)
+    const users = await storage.get('users')
+    expect(users[0].puntosGrupos).toBe(10) // 1-1 exacto
+  })
+
+  it('re-scores an already-finished match when a corrected score arrives', async () => {
+    const matches = baseMatches()
+    matches[0].estado = 'finalizado'
+    matches[0].resultadoA = 1
+    matches[0].resultadoB = 1
+    await storage.set('matches', matches)
+    await storage.set('users', [{ alias: 'Ana', puntosGrupos: 0, puntosEliminatorias: 0 }])
+    await storage.set('pronosticos_grupos:Ana', [{ matchId: 'g_A_0', pronosticoA: 2, pronosticoB: 0, puntos: 0 }])
+
+    // Llega el resultado real corregido 2-0 (antes lo habíamos cerrado en 1-1).
+    await applySync([{ home: 'Mexico', away: 'South Africa', status: 'finished', rA: 2, rB: 0, minuto: '90', eventos: [] }])
+    const m = (await storage.get('matches')).find((x) => x.id === 'g_A_0')
+    expect(m.resultadoA).toBe(2)
+    const users = await storage.get('users')
+    expect(users[0].puntosGrupos).toBe(10) // re-scored al marcador real
   })
 
   it('does not double-award an already finished match', async () => {
