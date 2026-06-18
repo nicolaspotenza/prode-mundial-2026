@@ -109,3 +109,12 @@ export async function migrateLocalToRemote({ storage, matches, localReader = rea
 
   return { migratedUsers: localUsers.length, gruposAdded, llavesAdded }
 }
+
+// Migración automática al cargar: si este dispositivo tiene datos varados de la época
+// anterior a Upstash (un amigo que apostó antes de mudar la base), los sube al backend
+// compartido sin que tenga que tocar nada. Es no destructivo y corre una sola vez (el
+// flag `migrated` lo desactiva). Devuelve el resumen si migró, o null si no había nada.
+export async function autoMigrateIfNeeded({ storage, matches, localReader = readLocalRaw } = {}) {
+  if (!hasLocalData()) return null
+  return migrateLocalToRemote({ storage, matches, localReader })
+}

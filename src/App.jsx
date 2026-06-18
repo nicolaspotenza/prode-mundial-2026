@@ -1,9 +1,9 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { RefreshCw, UserCog, CloudUpload } from 'lucide-react'
 import { useCurrentUser } from './hooks/useCurrentUser.js'
 import { useSync } from './hooks/useSync.js'
 import { storage } from './lib/storage.js'
-import { hasLocalData, migrateLocalToRemote } from './lib/migrate.js'
+import { hasLocalData, migrateLocalToRemote, autoMigrateIfNeeded } from './lib/migrate.js'
 import BottomNav from './components/BottomNav.jsx'
 import MatchDetail from './components/MatchDetail.jsx'
 import Skeleton from './components/Skeleton.jsx'
@@ -29,11 +29,33 @@ export default function App() {
   const [openMatch, setOpenMatch] = useState(null)
   const [canMigrate, setCanMigrate] = useState(false)
   const [migrating, setMigrating] = useState(false)
+  const autoTried = useRef(false)
 
+  const isProd = typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.PROD
+
+  // El botón manual es solo un respaldo: lo mostramos si quedan datos varados.
   useEffect(() => {
-    const prod = typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.PROD
-    setCanMigrate(Boolean(prod && hasLocalData()))
-  }, [])
+    setCanMigrate(Boolean(isProd && hasLocalData()))
+  }, [isProd])
+
+  // Auto-migración: un amigo que apostó antes de Upstash tiene sus datos varados en el
+  // localStorage de este teléfono. Apenas el primer sync siembra `matches` (tick > 0), los
+  // subimos solos al backend para que al entrar con su alias vea todo. Corre una sola vez y
+  // es no destructivo; si falla, dejamos el botón manual como respaldo.
+  useEffect(() => {
+    if (!isProd || tick === 0 || autoTried.current || !hasLocalData()) return
+    autoTried.current = true
+    ;(async () => {
+      try {
+        const matches = (await storage.get('matches')) || []
+        await autoMigrateIfNeeded({ storage, matches })
+        setCanMigrate(false)
+        await runSync()
+      } catch {
+        /* el botón manual queda disponible como respaldo */
+      }
+    })()
+  }, [isProd, tick, runSync])
 
   const migrate = async () => {
     if (migrating) return

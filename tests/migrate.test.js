@@ -5,6 +5,7 @@ import {
   mergeByKey,
   rescoreGroupPreds,
   migrateLocalToRemote,
+  autoMigrateIfNeeded,
   hasLocalData,
 } from '../src/lib/migrate.js'
 
@@ -23,6 +24,37 @@ describe('hasLocalData', () => {
     localStorage.setItem('prode:users', JSON.stringify([{ alias: 'Ana' }]))
     localStorage.setItem('prode:migrated', JSON.stringify(true))
     expect(hasLocalData()).toBe(false)
+  })
+})
+
+describe('autoMigrateIfNeeded', () => {
+  const matches = [{ id: 'g_A_0', estado: 'finalizado', resultadoA: 2, resultadoB: 0 }]
+
+  it('migrates stranded localStorage data without any user action', async () => {
+    // Friend used the app before Upstash: their data is stranded in this device's localStorage.
+    localStorage.setItem('prode:users', JSON.stringify([{ alias: 'Beto' }]))
+    localStorage.setItem(
+      'prode:pronosticos_grupos:Beto',
+      JSON.stringify([{ matchId: 'g_A_0', pronosticoA: 2, pronosticoB: 0, puntos: null }]),
+    )
+
+    const summary = await autoMigrateIfNeeded({ storage, matches })
+
+    expect(summary).not.toBeNull()
+    const users = await storage.get('users')
+    expect(users.map((u) => u.alias)).toContain('Beto')
+    const preds = await storage.get('pronosticos_grupos:Beto')
+    expect(preds.find((p) => p.matchId === 'g_A_0').puntos).toBe(10) // re-scored exact
+  })
+
+  it('is a no-op when there is no stranded data', async () => {
+    expect(await autoMigrateIfNeeded({ storage, matches })).toBeNull()
+  })
+
+  it('does not run twice (migrated flag stops it)', async () => {
+    localStorage.setItem('prode:users', JSON.stringify([{ alias: 'Beto' }]))
+    expect(await autoMigrateIfNeeded({ storage, matches })).not.toBeNull()
+    expect(await autoMigrateIfNeeded({ storage, matches })).toBeNull()
   })
 })
 
