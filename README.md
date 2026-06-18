@@ -44,6 +44,15 @@ La función serverless [`api/storage.js`](./api/storage.js) expone `GET/POST /ap
 
 Hasta conectarlo, la app funciona igual pero el ranking es local por dispositivo.
 
+### Mudar datos locales al backend
+
+Si un jugador cargó datos **antes** de conectar Upstash, quedaron en el `localStorage` de
+su celular. En producción aparece un botón ☁️ (`CloudUpload`) en el header **solo si se
+detectan datos locales sin migrar**. Al tocarlo, `src/lib/migrate.js` mergea su usuario y
+pronósticos al backend compartido de forma **no destructiva** (lo que ya está en la nube
+gana; lo local solo rellena huecos), re-puntúa los pronósticos de grupos y marca el flag
+`prode:migrated` para no repetir.
+
 ## Fuentes de datos
 
 Configurables en `src/config.js` (`DATA_CONFIG`). Orden con degradación silenciosa:

@@ -1,7 +1,9 @@
-import { useState } from 'react'
-import { RefreshCw, UserCog } from 'lucide-react'
+import { useState, useEffect } from 'react'
+import { RefreshCw, UserCog, CloudUpload } from 'lucide-react'
 import { useCurrentUser } from './hooks/useCurrentUser.js'
 import { useSync } from './hooks/useSync.js'
+import { storage } from './lib/storage.js'
+import { hasLocalData, migrateLocalToRemote } from './lib/migrate.js'
 import BottomNav from './components/BottomNav.jsx'
 import MatchDetail from './components/MatchDetail.jsx'
 import Skeleton from './components/Skeleton.jsx'
@@ -25,6 +27,30 @@ export default function App() {
   const { syncing, lastSync, tick, runSync } = useSync()
   const [tab, setTab] = useState('home')
   const [openMatch, setOpenMatch] = useState(null)
+  const [canMigrate, setCanMigrate] = useState(false)
+  const [migrating, setMigrating] = useState(false)
+
+  useEffect(() => {
+    const prod = typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.PROD
+    setCanMigrate(Boolean(prod && hasLocalData()))
+  }, [])
+
+  const migrate = async () => {
+    if (migrating) return
+    if (!confirm('¿Mudar tus datos guardados en este dispositivo al ranking compartido? No se pisa nada que ya esté en la nube.')) return
+    setMigrating(true)
+    try {
+      const matches = (await storage.get('matches')) || []
+      const r = await migrateLocalToRemote({ storage, matches })
+      alert(`Listo. Migrados: ${r.migratedUsers} jugador(es), ${r.gruposAdded} pronósticos de grupos y ${r.llavesAdded} de llaves.`)
+      setCanMigrate(false)
+      await runSync()
+    } catch (e) {
+      alert('No se pudo migrar: ' + (e?.message || e))
+    } finally {
+      setMigrating(false)
+    }
+  }
 
   if (alias === undefined) {
     return (
@@ -51,6 +77,17 @@ export default function App() {
           <p className="text-xs text-white/40">Hola, {alias}</p>
         </div>
         <div className="flex items-center gap-1">
+          {canMigrate && (
+            <button
+              onClick={migrate}
+              disabled={migrating}
+              aria-label="Mudar mis datos a la nube"
+              title="Mudar mis datos de este dispositivo al ranking compartido"
+              className="rounded-full p-2 hover:bg-white/10"
+            >
+              <CloudUpload size={18} className={migrating ? 'animate-pulse text-pitch' : 'text-trophy'} />
+            </button>
+          )}
           <button onClick={runSync} aria-label="Actualizar" className="rounded-full p-2 hover:bg-white/10">
             <RefreshCw size={18} className={syncing ? 'animate-spin text-pitch' : 'text-white/60'} />
           </button>
