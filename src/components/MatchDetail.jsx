@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { X } from 'lucide-react'
 import { isBloqueado } from '../lib/matchState.js'
 import { useStored } from '../hooks/useStored.js'
-import { getGroupPredictions } from '../lib/predictions.js'
+import { getGroupPredictions, getOthersGroupPredictions } from '../lib/predictions.js'
 import Flag from './Flag.jsx'
 import LiveBadge from './LiveBadge.jsx'
 
@@ -23,12 +23,15 @@ function EventRow({ ev }) {
 export default function MatchDetail({ match, alias, onClose }) {
   const eventos = useStored(match ? `eventos_partido:${match.id}` : null, match?.id) || []
   const [prediction, setPrediction] = useState(null)
+  const [others, setOthers] = useState([])
 
   useEffect(() => {
     if (match?.fase === 'grupos' && alias) {
       getGroupPredictions(alias).then((list) => setPrediction(list.find((p) => p.matchId === match.id) || null))
+      getOthersGroupPredictions(match.id, alias).then(setOthers)
     } else {
       setPrediction(null)
+      setOthers([])
     }
   }, [match, alias])
 
@@ -84,6 +87,21 @@ export default function MatchDetail({ match, alias, onClose }) {
             <div className="mb-3 rounded-xl bg-bg/60 p-2 text-center text-sm">
               Tu pronóstico: <span className="font-semibold">{prediction.pronosticoA} : {prediction.pronosticoB}</span>
               {prediction.puntos != null && <span className="ml-2 font-semibold text-trophy">+{prediction.puntos} pts</span>}
+            </div>
+          )}
+
+          {match.fase === 'grupos' && others.length > 0 && (
+            <div className="mb-3">
+              <h3 className="mb-1 font-head text-sm uppercase tracking-wide text-white/40">Otros jugadores</h3>
+              <ul className="divide-y divide-white/5">
+                {others.map((o) => (
+                  <li key={o.alias} className="flex items-center gap-2 py-1.5 text-sm">
+                    <span className="truncate font-medium">{o.alias}</span>
+                    <span className="ml-auto font-semibold tabular-nums">{o.pronosticoA} : {o.pronosticoB}</span>
+                    {o.puntos != null && <span className="w-12 text-right font-semibold text-trophy">+{o.puntos}</span>}
+                  </li>
+                ))}
+              </ul>
             </div>
           )}
 

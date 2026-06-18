@@ -17,6 +17,23 @@ export async function setGroupPrediction(alias, matchId, pronosticoA, pronostico
   return list
 }
 
+// Apuestas de los demás jugadores para un partido de grupos (alias + marcador + puntos).
+// Excluye al usuario actual y omite a quienes no cargaron un marcador para ese partido.
+export async function getOthersGroupPredictions(matchId, excludeAlias) {
+  const users = (await storage.get('users')) || []
+  const exclude = excludeAlias?.toLowerCase()
+  const out = []
+  for (const u of users) {
+    if (exclude && u.alias.toLowerCase() === exclude) continue
+    const list = (await storage.get(`pronosticos_grupos:${u.alias}`)) || []
+    const p = list.find((x) => x.matchId === matchId)
+    if (p && p.pronosticoA != null && p.pronosticoB != null) {
+      out.push({ alias: u.alias, pronosticoA: p.pronosticoA, pronosticoB: p.pronosticoB, puntos: p.puntos })
+    }
+  }
+  return out
+}
+
 export async function getKnockoutPredictions(alias) {
   return (await storage.get(`pronosticos_eliminatorias:${alias}`)) || []
 }
