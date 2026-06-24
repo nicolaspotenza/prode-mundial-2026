@@ -11,7 +11,7 @@ export function calcularPuntosGrupos(pA, pB, rA, rB) {
   return pts
 }
 
-// Knockouts: all-or-nothing, no score prediction — only which team advances.
-export function calcularPuntosEliminatoria(elegido, clasificado) {
-  return elegido != null && elegido === clasificado ? 10 : 0
+// Knockouts: all-or-nothing, sin marcador — solo el ganador del cruce.
+export function calcularPuntosEliminatoria(ganadorElegido, ganadorReal) {
+  return ganadorElegido != null && ganadorReal != null && ganadorElegido === ganadorReal ? 20 : 0
 }

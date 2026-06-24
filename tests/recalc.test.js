@@ -32,6 +32,6 @@ describe('recomputeSlotForAllUsers', () => {
     await recomputeSlotForAllUsers('s1', 'Argentina')
 
     const users = await storage.get('users')
-    expect(users[0].puntosEliminatorias).toBe(10)
+    expect(users[0].puntosEliminatorias).toBe(20)
   })
 })

@@ -11,7 +11,8 @@ describe('calcularPuntosGrupos', () => {
 })
 
 describe('calcularPuntosEliminatoria', () => {
-  it('correct team = 10', () => expect(calcularPuntosEliminatoria('Argentina', 'Argentina')).toBe(10))
-  it('wrong team = 0', () => expect(calcularPuntosEliminatoria('Brasil', 'Argentina')).toBe(0))
-  it('no pick = 0', () => expect(calcularPuntosEliminatoria(null, 'Argentina')).toBe(0))
+  it('ganador acertado = 20', () => expect(calcularPuntosEliminatoria('Argentina', 'Argentina')).toBe(20))
+  it('ganador equivocado = 0', () => expect(calcularPuntosEliminatoria('Brasil', 'Argentina')).toBe(0))
+  it('sin elección = 0', () => expect(calcularPuntosEliminatoria(null, 'Argentina')).toBe(0))
+  it('sin resultado real = 0', () => expect(calcularPuntosEliminatoria('Argentina', null)).toBe(0))
 })
