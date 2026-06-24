@@ -1,12 +1,13 @@
 import { storage } from './storage.js'
 import { FIXTURES } from '../data/fixtures.js'
-import { ELIMINATION_SLOTS } from '../data/bracket.js'
+import { ELIMINATION_MATCHES } from '../data/bracket.js'
+import { recomputeUserTotals } from './recalc.js'
 
-// Subir esta versión fuerza re-sembrar partidos/slots cuando cambia su estructura
-// (p. ej. al pasar al fixture oficial). Los pronósticos no se tocan: van por matchId/slotId.
-const SEED_VERSION = 2
+// Subir esta versión fuerza re-sembrar partidos/cuadro cuando cambia su estructura.
+// Los pronósticos de grupos NO se tocan (van por matchId).
+const SEED_VERSION = 3
 
-// Siembra el storage compartido con los partidos y el bracket hardcodeados.
+// Siembra el storage compartido con los partidos y el cuadro hardcodeados.
 // La sincronización luego actualiza estos registros con datos reales.
 export async function ensureSeeded() {
   const version = await storage.get('seed_version')
@@ -17,10 +18,26 @@ export async function ensureSeeded() {
     await storage.set('matches', FIXTURES.map((m) => ({ ...m })))
   }
 
-  const slots = await storage.get('elimination_slots')
-  if (stale || !slots || slots.length === 0) {
-    await storage.set('elimination_slots', ELIMINATION_SLOTS.map((s) => ({ ...s })))
+  const ko = await storage.get('elimination_matches')
+  if (stale || !ko || ko.length === 0) {
+    await storage.set('elimination_matches', ELIMINATION_MATCHES.map((m) => ({ ...m })))
   }
 
-  if (stale) await storage.set('seed_version', SEED_VERSION)
+  if (stale) {
+    // El modelo viejo de eliminatorias (slots `pos_`/`ko_*` con `slotId`) es incompatible
+    // con el nuevo (por `matchId`). Descartamos esos pronósticos sin tocar los de grupos.
+    let limpiado = false
+    const users = (await storage.get('users')) || []
+    for (const u of users) {
+      const key = `pronosticos_eliminatorias:${u.alias}`
+      const list = (await storage.get(key)) || []
+      const cleaned = list.filter((p) => p.matchId)
+      if (cleaned.length !== list.length) {
+        await storage.set(key, cleaned)
+        limpiado = true
+      }
+    }
+    if (limpiado) await recomputeUserTotals()
+    await storage.set('seed_version', SEED_VERSION)
+  }
 }
