@@ -15,13 +15,13 @@ const GRUPOS_EXAMPLES = [
 ]
 
 const ELIM_RULES = [
-  { pts: '+10', label: 'Equipo que avanza', desc: 'el equipo que pusiste es el que realmente avanzó' },
+  { pts: '+20', label: 'Ganador del cruce', desc: 'el equipo que hiciste avanzar es el que realmente ganó el cruce' },
   { pts: '0', label: 'Incorrecto o vacío', desc: 'no se predicen marcadores, solo quién avanza' },
 ]
 
 const SUMMARY = {
   grupos: 'Exacto +10 · Ganador +5 · Goles +2',
-  eliminatorias: 'Equipo que avanza +10',
+  eliminatorias: 'Ganador del cruce +20',
 }
 
 export default function ScoringInfo({ variant = 'grupos' }) {
@@ -84,7 +84,7 @@ export default function ScoringInfo({ variant = 'grupos' }) {
 
               {variant === 'eliminatorias' && (
                 <p className="mt-1 rounded-lg bg-bg/60 p-2 text-xs text-white/50">
-                  Cada acierto vale lo mismo (+10) en cualquier ronda: Octavos, Cuartos, Semis o Final.
+                  Cada acierto vale +20 en cualquier ronda: Dieciseisavos, Octavos, Cuartos, Semis o Final.
                 </p>
               )}
             </div>
