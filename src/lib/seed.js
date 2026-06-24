@@ -14,12 +14,16 @@ export async function ensureSeeded() {
   const matches = await storage.get('matches')
   const stale = version !== SEED_VERSION
 
-  if (stale || !matches || matches.length === 0) {
+  // NUNCA pisar matches/elimination_matches existentes: contienen resultados en vivo
+  // acumulados por el sync. Un bump de SEED_VERSION NO debe destruir esos datos (si lo
+  // hace, el próximo applySync ve todos los finalizados como "nuevos" y dispara un
+  // recálculo masivo por usuario que cuelga la app). Solo se siembra lo que falta.
+  if (!matches || matches.length === 0) {
     await storage.set('matches', FIXTURES.map((m) => ({ ...m })))
   }
 
   const ko = await storage.get('elimination_matches')
-  if (stale || !ko || ko.length === 0) {
+  if (!ko || ko.length === 0) {
     await storage.set('elimination_matches', ELIMINATION_MATCHES.map((m) => ({ ...m })))
   }
 
