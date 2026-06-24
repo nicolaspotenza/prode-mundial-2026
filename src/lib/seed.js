@@ -9,8 +9,8 @@ const SEED_VERSION = 3
 
 // Siembra el storage compartido con los partidos y el cuadro hardcodeados.
 // La sincronización luego actualiza estos registros con datos reales.
-export async function ensureSeeded() {
-  const version = await storage.get('seed_version')
+export async function ensureSeeded(store = storage) {
+  const version = await store.get('seed_version')
   const firstRun = version == null
 
   // Sembrar matches/elimination_matches SOLO en el primer arranque del backend
@@ -20,11 +20,11 @@ export async function ensureSeeded() {
   // en blanco, y el próximo applySync vería decenas de finalizados "nuevos" disparando un
   // recálculo masivo por usuario que cuelga la carga. Por eso nunca se re-siembra.
   if (firstRun) {
-    if (!(await storage.get('matches'))?.length) {
-      await storage.set('matches', FIXTURES.map((m) => ({ ...m })))
+    if (!(await store.get('matches'))?.length) {
+      await store.set('matches', FIXTURES.map((m) => ({ ...m })))
     }
-    if (!(await storage.get('elimination_matches'))?.length) {
-      await storage.set('elimination_matches', ELIMINATION_MATCHES.map((m) => ({ ...m })))
+    if (!(await store.get('elimination_matches'))?.length) {
+      await store.set('elimination_matches', ELIMINATION_MATCHES.map((m) => ({ ...m })))
     }
   }
 
@@ -32,17 +32,17 @@ export async function ensureSeeded() {
     // El modelo viejo de eliminatorias (slots `pos_`/`ko_*` con `slotId`) es incompatible
     // con el nuevo (por `matchId`). Descartamos esos pronósticos sin tocar los de grupos.
     let limpiado = false
-    const users = (await storage.get('users')) || []
+    const users = (await store.get('users')) || []
     for (const u of users) {
       const key = `pronosticos_eliminatorias:${u.alias}`
-      const list = (await storage.get(key)) || []
+      const list = (await store.get(key)) || []
       const cleaned = list.filter((p) => p.matchId)
       if (cleaned.length !== list.length) {
-        await storage.set(key, cleaned)
+        await store.set(key, cleaned)
         limpiado = true
       }
     }
-    if (limpiado) await recomputeUserTotals()
-    await storage.set('seed_version', SEED_VERSION)
+    if (limpiado) await recomputeUserTotals(store)
+    await store.set('seed_version', SEED_VERSION)
   }
 }

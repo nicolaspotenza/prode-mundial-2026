@@ -42,6 +42,17 @@ describe('createRemoteStorage', () => {
     expect(await remote.get('users')).toEqual([{ alias: 'Local' }])
   })
 
+  // El gatillo del cuelgue de carga: un fetch que rechaza (red caída / timeout) hace que
+  // get caiga al shim local. Si ese shim está vacío (servidor/dispositivo fresco), devuelve
+  // null — y un consumidor ingenuo podría interpretarlo como "datos faltantes" y pisarlos.
+  it('get returns null when fetch THROWS and the local fallback is empty (transient failure trigger)', async () => {
+    const fetchImpl = vi.fn(async () => {
+      throw new Error('network down')
+    })
+    const remote = createRemoteStorage(fetchImpl, '/api/storage', makeMemFallback())
+    expect(await remote.get('matches')).toBeNull()
+  })
+
   it('set falls back to the local store when the backend is unavailable', async () => {
     const fetchImpl = vi.fn(async () => ({ ok: false, json: async () => ({}) }))
     const fallback = makeMemFallback()

@@ -29,15 +29,15 @@ export async function recomputeMatchForAllUsers(matchId, ganadorReal) {
   await recomputeUserTotals()
 }
 
-export async function recomputeUserTotals() {
-  const users = (await storage.get('users')) || []
+export async function recomputeUserTotals(store = storage) {
+  const users = (await store.get('users')) || []
   for (const u of users) {
-    const g = (await storage.get(`pronosticos_grupos:${u.alias}`)) || []
-    const e = (await storage.get(`pronosticos_eliminatorias:${u.alias}`)) || []
+    const g = (await store.get(`pronosticos_grupos:${u.alias}`)) || []
+    const e = (await store.get(`pronosticos_eliminatorias:${u.alias}`)) || []
     u.puntosGrupos = g.reduce((s, p) => s + (p.puntos || 0), 0)
     u.puntosEliminatorias = e.reduce((s, p) => s + (p.puntos || 0), 0)
     u.totalPuntos = u.puntosGrupos + u.puntosEliminatorias + (u.bonus || 0)
   }
-  await storage.set('users', users)
+  await store.set('users', users)
   return users
 }
