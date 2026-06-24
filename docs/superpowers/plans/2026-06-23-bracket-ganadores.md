@@ -736,12 +736,15 @@ export default function Bracket({ alias, tick }) {
         hasta llegar al <span className="font-semibold text-trophy">campeón</span>.
       </p>
 
-      <div className="-mx-4 overflow-x-auto px-4">
+      {/* Scroll horizontal con snap por ronda: en mobile cada ronda ocupa casi todo
+          el ancho (se desliza y encaja una por una, sin achicarse); en pantallas
+          grandes (sm+) vuelven a verse varias columnas a la vez. */}
+      <div className="-mx-4 snap-x snap-mandatory scroll-px-4 overflow-x-auto px-4">
         <div className="flex gap-3" style={{ minWidth: 'max-content' }}>
           {KO_RONDAS.map((ronda) => {
             const roundMatches = KO_MATCHES.filter((m) => m.ronda === ronda)
             return (
-              <div key={ronda} className="w-48 shrink-0 space-y-2">
+              <div key={ronda} className="w-[80vw] max-w-[18rem] shrink-0 snap-start space-y-2 sm:w-52">
                 <h3 className="font-head text-sm font-semibold uppercase tracking-wide text-white/50">
                   {RONDA_LABELS[ronda]}
                 </h3>
@@ -763,7 +766,7 @@ export default function Bracket({ alias, tick }) {
           })}
 
           {/* Campeón */}
-          <div className="flex w-32 shrink-0 flex-col items-center justify-center gap-2">
+          <div className="flex w-[60vw] max-w-[10rem] shrink-0 snap-start flex-col items-center justify-center gap-2 sm:w-32">
             <span className="text-4xl">🏆</span>
             <span className="font-head text-sm text-white/50">Campeón</span>
             {campeon ? (
@@ -791,8 +794,8 @@ Expected: PASS toda la suite.
 - [ ] **Step 3: Verificación manual**
 
 Run: `npm run dev`
-Comprobar en el navegador (mobile view), pestaña Llaves:
-1. Se ven 5 columnas (Dieciseisavos → Final) + Campeón, con scroll horizontal.
+Comprobar en el navegador (mobile view, ~390px), pestaña Llaves:
+1. Cada ronda ocupa casi todo el ancho y el scroll horizontal "encaja" de a una ronda (snap); no se achica. En pantalla grande (sm+) se ven varias columnas a la vez.
 2. Dieciseisavos muestra los 16 cruces fijos (Alemania vs Escocia, …, Portugal vs Paraguay).
 3. Tocar un equipo lo resalta y aparece como lado en la ronda siguiente.
 4. Completar una rama hasta la final actualiza el 🏆 Campeón.
