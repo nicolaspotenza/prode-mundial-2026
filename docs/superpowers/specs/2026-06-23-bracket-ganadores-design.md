@@ -26,6 +26,16 @@ final).
 4. **Los pronósticos de eliminatorias del modelo viejo se descartan** (incompatibles).
    Los pronósticos de grupos NO se tocan.
 
+## Restricción dura
+
+**No se toca ningún dato almacenado de pronósticos de partidos de grupos ni sus
+puntos.** Todos los cambios son exclusivamente sobre la sección de llaves
+(eliminatorias): `pronosticos_eliminatorias:{alias}`, `elimination_matches` y su
+scoring/recalc. Las claves `pronosticos_grupos:{alias}`, `matches` (resultados de
+grupos) y los campos `puntosGrupos` de cada usuario quedan intactos. El recálculo de
+`totalPuntos` solo cambia por el nuevo puntaje de eliminatorias; la parte de grupos
+se conserva tal cual.
+
 ## Estructura del cuadro
 
 Árbol de 5 rondas. El **orden** de los 16 cruces de R32 define todo el árbol: el
