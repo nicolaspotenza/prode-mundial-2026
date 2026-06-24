@@ -136,6 +136,22 @@ describe('migrateLocalToRemote', () => {
     expect(summary.llavesAdded).toBe(1)
   })
 
+  it('filters out legacy slot-based eliminatoria picks (no matchId)', async () => {
+    await storage.set('users', [])
+    await storage.set('matches', matches)
+
+    const local = {
+      users: [{ alias: 'Caro', puntosGrupos: 0, puntosEliminatorias: 0 }],
+      'pronosticos_eliminatorias:Caro': [
+        { slotId: 'pos_A_1', equipoElegido: 'México', puntos: null },
+      ],
+    }
+    await migrateLocalToRemote({ storage, matches, localReader: localReader(local) })
+
+    const elim = await storage.get('pronosticos_eliminatorias:Caro')
+    expect(elim).toHaveLength(0)
+  })
+
   it('does not overwrite an existing remote bet for the same alias', async () => {
     await storage.set('users', [{ alias: 'Ana', puntosGrupos: 0, puntosEliminatorias: 0 }])
     await storage.set('pronosticos_grupos:Ana', [{ matchId: 'g_A_0', pronosticoA: 1, pronosticoB: 1, puntos: 5 }])

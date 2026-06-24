@@ -16,6 +16,8 @@ function TeamRow({ team, picked, real, onPick }) {
       type="button"
       disabled={disabled}
       onClick={() => onPick(team)}
+      aria-pressed={picked}
+      aria-label={team || 'A definir'}
       className={`flex w-full items-center gap-2 rounded-lg px-2 py-1.5 text-left text-sm transition
         ${picked ? 'bg-pitch/20 ring-1 ring-pitch' : 'bg-bg hover:bg-white/5'}
         ${disabled ? 'cursor-default opacity-40' : ''}`}
@@ -46,15 +48,19 @@ export default function Bracket({ alias, tick }) {
   const [preds, setPreds] = useState([])
 
   useEffect(() => {
-    getKnockoutPredictions(alias).then(setPreds)
+    getKnockoutPredictions(alias).then(setPreds).catch(() => {})
   }, [alias, tick])
 
   const resolved = useMemo(() => resolveBracket(preds), [preds])
   const realById = useMemo(() => new Map(matches.map((m) => [m.id, m.ganador])), [matches])
 
   const handlePick = async (matchId, team) => {
-    const list = await setKnockoutPrediction(alias, matchId, team)
-    setPreds([...list])
+    try {
+      const list = await setKnockoutPrediction(alias, matchId, team)
+      setPreds([...list])
+    } catch {
+      /* silent degradation per spec */
+    }
   }
 
   const campeon = resolved['ko_final_1']?.ganador || null

@@ -96,7 +96,7 @@ export async function migrateLocalToRemote({ storage, matches, localReader = rea
     gruposAdded += mergedG.length - remoteG.length
     await storage.set(gKey, mergedG)
 
-    const localE = localReader(eKey) || []
+    const localE = (localReader(eKey) || []).filter((p) => p.matchId)
     const remoteE = (await storage.get(eKey)) || []
     const mergedE = mergeByKey(remoteE, localE, 'matchId')
     llavesAdded += mergedE.length - remoteE.length
