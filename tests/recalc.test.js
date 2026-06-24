@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach } from 'vitest'
 import { storage } from '../src/lib/storage.js'
-import { recomputeGroupMatchForAllUsers, recomputeSlotForAllUsers } from '../src/lib/recalc.js'
+import { recomputeGroupMatchForAllUsers, recomputeMatchForAllUsers } from '../src/lib/recalc.js'
 
 beforeEach(() => storage._resetForTests())
 
@@ -24,12 +24,14 @@ describe('recomputeGroupMatchForAllUsers', () => {
   })
 })
 
-describe('recomputeSlotForAllUsers', () => {
-  it('awards knockout points to users who picked the advancing team', async () => {
+describe('recomputeMatchForAllUsers', () => {
+  it('awards knockout points to users who picked the winning team', async () => {
     await storage.set('users', [{ alias: 'Ana', puntosGrupos: 0, puntosEliminatorias: 0 }])
-    await storage.set('pronosticos_eliminatorias:Ana', [{ slotId: 's1', equipoElegido: 'Argentina', puntos: null }])
+    await storage.set('pronosticos_eliminatorias:Ana', [
+      { userId: 'Ana', matchId: 'ko_dieciseisavos_13', ganador: 'Argentina', puntos: null },
+    ])
 
-    await recomputeSlotForAllUsers('s1', 'Argentina')
+    await recomputeMatchForAllUsers('ko_dieciseisavos_13', 'Argentina')
 
     const users = await storage.get('users')
     expect(users[0].puntosEliminatorias).toBe(20)

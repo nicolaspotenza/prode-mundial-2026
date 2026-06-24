@@ -15,14 +15,14 @@ export async function recomputeGroupMatchForAllUsers(matchId, rA, rB) {
   await recomputeUserTotals()
 }
 
-export async function recomputeSlotForAllUsers(slotId, equipoClasificado) {
+export async function recomputeMatchForAllUsers(matchId, ganadorReal) {
   const users = (await storage.get('users')) || []
   for (const u of users) {
     const key = `pronosticos_eliminatorias:${u.alias}`
     const list = (await storage.get(key)) || []
-    const p = list.find((x) => x.slotId === slotId)
+    const p = list.find((x) => x.matchId === matchId)
     if (p) {
-      p.puntos = calcularPuntosEliminatoria(p.equipoElegido, equipoClasificado)
+      p.puntos = calcularPuntosEliminatoria(p.ganador, ganadorReal)
       await storage.set(key, list)
     }
   }
