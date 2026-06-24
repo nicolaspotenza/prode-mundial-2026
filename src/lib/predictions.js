@@ -1,4 +1,5 @@
 import { storage } from './storage.js'
+import { setBracketPick } from './bracket.js'
 
 export async function getGroupPredictions(alias) {
   return (await storage.get(`pronosticos_grupos:${alias}`)) || []
@@ -38,14 +39,9 @@ export async function getKnockoutPredictions(alias) {
   return (await storage.get(`pronosticos_eliminatorias:${alias}`)) || []
 }
 
-export async function setKnockoutPrediction(alias, slotId, equipoElegido) {
+export async function setKnockoutPrediction(alias, matchId, ganador) {
   const list = await getKnockoutPredictions(alias)
-  let p = list.find((x) => x.slotId === slotId)
-  if (!p) {
-    p = { userId: alias, slotId, equipoElegido: null, puntos: null }
-    list.push(p)
-  }
-  p.equipoElegido = equipoElegido
-  await storage.set(`pronosticos_eliminatorias:${alias}`, list)
-  return list
+  const next = setBracketPick(list, matchId, ganador || null, alias)
+  await storage.set(`pronosticos_eliminatorias:${alias}`, next)
+  return next
 }
