@@ -36,7 +36,7 @@ export async function recomputeUserTotals() {
     const e = (await storage.get(`pronosticos_eliminatorias:${u.alias}`)) || []
     u.puntosGrupos = g.reduce((s, p) => s + (p.puntos || 0), 0)
     u.puntosEliminatorias = e.reduce((s, p) => s + (p.puntos || 0), 0)
-    u.totalPuntos = u.puntosGrupos + u.puntosEliminatorias
+    u.totalPuntos = u.puntosGrupos + u.puntosEliminatorias + (u.bonus || 0)
   }
   await storage.set('users', users)
   return users

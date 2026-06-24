@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach } from 'vitest'
 import { storage } from '../src/lib/storage.js'
-import { recomputeGroupMatchForAllUsers, recomputeMatchForAllUsers } from '../src/lib/recalc.js'
+import { recomputeGroupMatchForAllUsers, recomputeMatchForAllUsers, recomputeUserTotals } from '../src/lib/recalc.js'
 
 beforeEach(() => storage._resetForTests())
 
@@ -35,5 +35,20 @@ describe('recomputeMatchForAllUsers', () => {
 
     const users = await storage.get('users')
     expect(users[0].puntosEliminatorias).toBe(20)
+  })
+})
+
+describe('recomputeUserTotals', () => {
+  it('incluye el bonus por usuario en totalPuntos', async () => {
+    await storage.set('users', [{ alias: 'Ana', bonus: 15 }])
+    await storage.set('pronosticos_grupos:Ana', [{ matchId: 'm1', puntos: 10 }])
+    await storage.set('pronosticos_eliminatorias:Ana', [{ matchId: 'k1', puntos: 20 }])
+
+    await recomputeUserTotals()
+
+    const u = (await storage.get('users'))[0]
+    expect(u.puntosGrupos).toBe(10)
+    expect(u.puntosEliminatorias).toBe(20)
+    expect(u.totalPuntos).toBe(45) // 10 + 20 + 15
   })
 })
