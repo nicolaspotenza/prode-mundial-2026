@@ -23,6 +23,9 @@ export function findFixture(matches, home, away) {
 export async function applySync(updates, now = Date.now()) {
   if (!updates) return { live: 0, finished: 0 }
   const matches = (await storage.get('matches')) || []
+  // Defensa: si el read de matches vino vacío (fallo transitorio del storage), NO seguir:
+  // guardar este array vacío/degradado pisaría los resultados compartidos del backend.
+  if (matches.length === 0) return { live: 0, finished: 0 }
   let finished = 0
 
   for (const u of updates) {

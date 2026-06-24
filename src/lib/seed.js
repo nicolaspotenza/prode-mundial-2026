@@ -11,23 +11,24 @@ const SEED_VERSION = 3
 // La sincronización luego actualiza estos registros con datos reales.
 export async function ensureSeeded() {
   const version = await storage.get('seed_version')
-  const matches = await storage.get('matches')
-  const stale = version !== SEED_VERSION
+  const firstRun = version == null
 
-  // NUNCA pisar matches/elimination_matches existentes: contienen resultados en vivo
-  // acumulados por el sync. Un bump de SEED_VERSION NO debe destruir esos datos (si lo
-  // hace, el próximo applySync ve todos los finalizados como "nuevos" y dispara un
-  // recálculo masivo por usuario que cuelga la app). Solo se siembra lo que falta.
-  if (!matches || matches.length === 0) {
-    await storage.set('matches', FIXTURES.map((m) => ({ ...m })))
+  // Sembrar matches/elimination_matches SOLO en el primer arranque del backend
+  // (seed_version ausente). Si el backend ya fue inicializado, un read vacío de estas
+  // claves es casi siempre un fallo transitorio del storage remoto (cae al shim local
+  // vacío), NO datos faltantes: re-sembrar pisaría los resultados en vivo con el fixture
+  // en blanco, y el próximo applySync vería decenas de finalizados "nuevos" disparando un
+  // recálculo masivo por usuario que cuelga la carga. Por eso nunca se re-siembra.
+  if (firstRun) {
+    if (!(await storage.get('matches'))?.length) {
+      await storage.set('matches', FIXTURES.map((m) => ({ ...m })))
+    }
+    if (!(await storage.get('elimination_matches'))?.length) {
+      await storage.set('elimination_matches', ELIMINATION_MATCHES.map((m) => ({ ...m })))
+    }
   }
 
-  const ko = await storage.get('elimination_matches')
-  if (!ko || ko.length === 0) {
-    await storage.set('elimination_matches', ELIMINATION_MATCHES.map((m) => ({ ...m })))
-  }
-
-  if (stale) {
+  if (version !== SEED_VERSION) {
     // El modelo viejo de eliminatorias (slots `pos_`/`ko_*` con `slotId`) es incompatible
     // con el nuevo (por `matchId`). Descartamos esos pronósticos sin tocar los de grupos.
     let limpiado = false

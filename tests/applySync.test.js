@@ -152,4 +152,15 @@ describe('applySync', () => {
   it('returns zeros for null updates', async () => {
     expect(await applySync(null)).toEqual({ live: 0, finished: 0 })
   })
+
+  it('no persiste matches cuando el read viene vacío (no pisa el backend ante un fallo transitorio)', async () => {
+    // matches no seteado: simula un read vacío/degradado del storage. Aunque llegue un
+    // update, applySync no debe guardar un array vacío encima de los datos compartidos.
+    const r = await applySync([
+      { home: 'Mexico', away: 'South Africa', status: 'finished', rA: 2, rB: 0, minuto: '90', eventos: [] },
+    ])
+    expect(r).toEqual({ live: 0, finished: 0 })
+    expect(await storage.get('matches')).toBeNull()
+    expect(await storage.get('last_sync')).toBeNull()
+  })
 })

@@ -35,6 +35,14 @@ describe('ensureSeeded', () => {
     expect((await storage.get('elimination_matches')).length).toBe(31)
   })
 
+  it('NO re-siembra matches si el backend ya está inicializado y el read viene vacío (fallo transitorio)', async () => {
+    await storage.set('seed_version', 3) // backend ya inicializado: NO es primer arranque
+    // matches ausente: simula un read vacío por un fallo transitorio del storage remoto.
+    await ensureSeeded()
+    const matches = await storage.get('matches')
+    expect(matches == null || matches.length === 0).toBe(true) // no se pisó con el fixture en blanco
+  })
+
   it('limpia picks viejos por slotId en el bump de versión pero conserva los de matchId', async () => {
     await storage.set('seed_version', 2)
     await storage.set('matches', [{ id: 'g_A_0', estado: 'programado' }])
