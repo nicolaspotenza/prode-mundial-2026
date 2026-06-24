@@ -120,7 +120,7 @@ describe('migrateLocalToRemote', () => {
       current_user: 'Beto',
       users: [{ alias: 'Beto', puntosGrupos: 0, puntosEliminatorias: 0 }],
       'pronosticos_grupos:Beto': [{ matchId: 'g_A_0', pronosticoA: 2, pronosticoB: 0, puntos: null }],
-      'pronosticos_eliminatorias:Beto': [{ slotId: 'pos_A_1', equipoElegido: 'México', puntos: null }],
+      'pronosticos_eliminatorias:Beto': [{ matchId: 'ko_dieciseisavos_13', ganador: 'Argentina', puntos: null }],
     }
 
     const summary = await migrateLocalToRemote({ storage, matches, localReader: localReader(local) })

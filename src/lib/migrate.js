@@ -98,7 +98,7 @@ export async function migrateLocalToRemote({ storage, matches, localReader = rea
 
     const localE = localReader(eKey) || []
     const remoteE = (await storage.get(eKey)) || []
-    const mergedE = mergeByKey(remoteE, localE, 'slotId')
+    const mergedE = mergeByKey(remoteE, localE, 'matchId')
     llavesAdded += mergedE.length - remoteE.length
     await storage.set(eKey, mergedE)
   }
