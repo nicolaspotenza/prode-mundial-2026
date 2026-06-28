@@ -11,30 +11,29 @@ import ScoringInfo from '../components/ScoringInfo.jsx'
 // reusando el mismo criterio y look que las tarjetas de Home. `meta` es el registro de
 // elimination_matches (estado/fecha/minuto), que completa applyKnockout desde la fuente.
 function CrossHeader({ meta, mirror }) {
-  if (!meta || !meta.estado) return null
+  if (!meta || (!meta.estado && !meta.fecha)) return null
   const { estado, fecha, minuto } = meta
-  if (estado === 'en_vivo') {
-    return (
-      <div className={`mb-1 flex ${mirror ? 'justify-start' : 'justify-end'}`}>
-        <LiveBadge minuto={minuto} />
-      </div>
-    )
-  }
-  const dot = estado === 'finalizado' ? 'bg-pitch' : 'bg-white/30'
-  const label = estado === 'finalizado' ? 'Final' : 'A jugarse'
+  // La fecha y hora se muestran SIEMPRE que se conozcan, en cualquier estado.
   const fechaTxt = fecha
     ? new Date(fecha).toLocaleString('es-AR', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })
     : ''
+  // Indicador de estado a la izquierda: badge EN VIVO en juego; dot + etiqueta si no.
+  const left =
+    estado === 'en_vivo' ? (
+      <LiveBadge minuto={minuto} />
+    ) : (
+      <span className={`flex items-center gap-1 ${mirror ? 'flex-row-reverse' : ''}`}>
+        <span className={`h-1.5 w-1.5 rounded-full ${estado === 'finalizado' ? 'bg-pitch' : 'bg-white/30'}`} />
+        {estado === 'finalizado' ? 'Final' : 'A jugarse'}
+      </span>
+    )
   return (
     <div
       className={`mb-1 flex items-center justify-between gap-1 text-[10px] text-white/45 ${
         mirror ? 'flex-row-reverse' : ''
       }`}
     >
-      <span className={`flex items-center gap-1 ${mirror ? 'flex-row-reverse' : ''}`}>
-        <span className={`h-1.5 w-1.5 rounded-full ${dot}`} />
-        {label}
-      </span>
+      {left}
       {fechaTxt && <span className="text-white/40">{fechaTxt}</span>}
     </div>
   )
