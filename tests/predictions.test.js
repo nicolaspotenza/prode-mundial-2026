@@ -1,8 +1,28 @@
 import { describe, it, expect, beforeEach } from 'vitest'
 import { storage } from '../src/lib/storage.js'
-import { getOthersGroupPredictions } from '../src/lib/predictions.js'
+import { getOthersGroupPredictions, setKnockoutPrediction, getKnockoutPredictions } from '../src/lib/predictions.js'
 
 beforeEach(() => storage._resetForTests())
+
+describe('setKnockoutPrediction', () => {
+  it('poda el pick aguas arriba que quedó inválido por el ganador REAL', async () => {
+    // Realidad: en dieciseisavos_1 avanzó Paraguay (no Alemania).
+    await storage.set('elimination_matches', [
+      { id: 'ko_dieciseisavos_1', ronda: 'dieciseisavos', ganador: 'Paraguay' },
+    ])
+    // El usuario tenía un pick de octavos_1 apostando a Alemania (que ya no participa).
+    await storage.set('pronosticos_eliminatorias:Ana', [
+      { userId: 'Ana', matchId: 'ko_octavos_1', ganador: 'Alemania', puntos: null },
+    ])
+
+    // Hace un pick nuevo cualquiera; al re-resolver con la realidad, el de octavos cae.
+    await setKnockoutPrediction('Ana', 'ko_dieciseisavos_2', 'Francia')
+
+    const list = await getKnockoutPredictions('Ana')
+    expect(list.find((p) => p.matchId === 'ko_octavos_1')).toBeUndefined()
+    expect(list.find((p) => p.matchId === 'ko_dieciseisavos_2').ganador).toBe('Francia')
+  })
+})
 
 describe('getOthersGroupPredictions', () => {
   beforeEach(async () => {

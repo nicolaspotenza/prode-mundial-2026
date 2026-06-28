@@ -41,7 +41,9 @@ export async function getKnockoutPredictions(alias) {
 
 export async function setKnockoutPrediction(alias, matchId, ganador) {
   const list = await getKnockoutPredictions(alias)
-  const next = setBracketPick(list, matchId, ganador || null, alias)
+  const elim = (await storage.get('elimination_matches')) || []
+  const realById = new Map(elim.map((m) => [m.id, m.ganador]))
+  const next = setBracketPick(list, matchId, ganador || null, alias, realById)
   await storage.set(`pronosticos_eliminatorias:${alias}`, next)
   return next
 }
