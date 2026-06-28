@@ -2,6 +2,7 @@ import { useEffect, useState, useCallback, useRef } from 'react'
 import { DATA_CONFIG } from '../config.js'
 import { syncWithSources, defaultSources } from '../lib/sources/index.js'
 import { applySync } from '../lib/applySync.js'
+import { applyKnockout } from '../lib/applyKnockout.js'
 import { ensureSeeded } from '../lib/seed.js'
 import { storage } from '../lib/storage.js'
 
@@ -17,6 +18,8 @@ export function useSync() {
       await ensureSeeded()
       const updates = await syncWithSources(defaultSources())
       const { live } = await applySync(updates)
+      // Llaves: detecta ganadores reales de eliminatorias y puntúa (anti-storm: una pasada).
+      await applyKnockout(updates)
       setLastSync(await storage.get('last_sync'))
       setTick((t) => t + 1)
       // adaptativo: re-poll rápido solo mientras haya algo en vivo

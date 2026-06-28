@@ -28,6 +28,9 @@ export async function fetchApiFootball() {
       minuto: f.fixture?.status?.elapsed ?? null,
       eventos: [],
       fecha: f.fixture?.date ?? null,
+      // En eliminatorias, API-Football marca con `winner: true` al equipo que avanza
+      // (incluye definición por penales). applyKnockout lo prioriza sobre los goles.
+      ganador: f.teams?.home?.winner ? f.teams?.home?.name : f.teams?.away?.winner ? f.teams?.away?.name : null,
     }))
   } catch {
     return null
