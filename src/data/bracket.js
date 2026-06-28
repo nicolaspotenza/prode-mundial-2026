@@ -41,33 +41,48 @@ export const RONDA_LABELS = {
   cuartos: 'Cuartos',
   semis: 'Semifinales',
   final: 'Final',
+  tercer: 'Tercer puesto',
 }
 
 // Árbol completo de partidos. R32 trae teamA/teamB fijos de DIECISEISAVOS; cada partido
 // superior referencia los dos partidos hijos que lo alimentan (teamA/teamB se derivan
 // en runtime de los ganadores del usuario). El campeón = ganador de ko_final_1.
-export const KO_MATCHES = ROUND_COUNTS.flatMap(([ronda, count], roundIdx) =>
-  Array.from({ length: count }, (_, i) => {
-    const indice = i + 1
-    const id = `ko_${ronda}_${indice}`
-    if (roundIdx === 0) {
-      const cross = DIECISEISAVOS[i]
-      return { id, ronda, indice, teamA: cross.teamA, teamB: cross.teamB, children: null }
-    }
-    const prev = ROUND_COUNTS[roundIdx - 1][0]
-    return {
-      id,
-      ronda,
-      indice,
-      teamA: null,
-      teamB: null,
-      children: [`ko_${prev}_${indice * 2 - 1}`, `ko_${prev}_${indice * 2}`],
-    }
-  }),
-)
+export const KO_MATCHES = [
+  ...ROUND_COUNTS.flatMap(([ronda, count], roundIdx) =>
+    Array.from({ length: count }, (_, i) => {
+      const indice = i + 1
+      const id = `ko_${ronda}_${indice}`
+      if (roundIdx === 0) {
+        const cross = DIECISEISAVOS[i]
+        return { id, ronda, indice, teamA: cross.teamA, teamB: cross.teamB, children: null, esTercerPuesto: false }
+      }
+      const prev = ROUND_COUNTS[roundIdx - 1][0]
+      return {
+        id,
+        ronda,
+        indice,
+        teamA: null,
+        teamB: null,
+        children: [`ko_${prev}_${indice * 2 - 1}`, `ko_${prev}_${indice * 2}`],
+        esTercerPuesto: false,
+      }
+    }),
+  ),
+  // Partido por el 3.º puesto: lo juegan los PERDEDORES de las dos semifinales.
+  // El ganador es 3.º y el otro 4.º. Suma 20 pts como cualquier cruce.
+  {
+    id: 'ko_tercer_1',
+    ronda: 'tercer',
+    indice: 1,
+    teamA: null,
+    teamB: null,
+    children: ['ko_semis_1', 'ko_semis_2'],
+    esTercerPuesto: true,
+  },
+]
 
 // Lo que se siembra en storage (clave `elimination_matches`). `ganador` es el resultado
-// REAL del cruce (null hasta conocerse; se completa por el mismo mecanismo que hoy).
+// REAL del cruce (null hasta conocerse; lo completa applyKnockout).
 export const ELIMINATION_MATCHES = KO_MATCHES.map((m) => ({
   id: m.id,
   ronda: m.ronda,

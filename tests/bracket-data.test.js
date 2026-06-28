@@ -17,7 +17,7 @@ describe('DIECISEISAVOS', () => {
 })
 
 describe('KO_MATCHES', () => {
-  it('tiene 31 partidos (16+8+4+2+1)', () => expect(KO_MATCHES).toHaveLength(31))
+  it('tiene 32 partidos (16+8+4+2+1+1 tercer puesto)', () => expect(KO_MATCHES).toHaveLength(32))
   it('los 16 de dieciseisavos tienen equipos fijos y sin hijos', () => {
     const r32 = KO_MATCHES.filter((m) => m.ronda === 'dieciseisavos')
     expect(r32).toHaveLength(16)
@@ -36,11 +36,17 @@ describe('KO_MATCHES', () => {
     const f = KO_MATCHES.find((m) => m.id === 'ko_final_1')
     expect(f.children).toEqual(['ko_semis_1', 'ko_semis_2'])
   })
+  it('el 3er puesto se alimenta de las dos semis y está marcado', () => {
+    const t = KO_MATCHES.find((m) => m.id === 'ko_tercer_1')
+    expect(t.ronda).toBe('tercer')
+    expect(t.children).toEqual(['ko_semis_1', 'ko_semis_2'])
+    expect(t.esTercerPuesto).toBe(true)
+  })
 })
 
 describe('ELIMINATION_MATCHES', () => {
-  it('un registro por partido, con ganador real null', () => {
-    expect(ELIMINATION_MATCHES).toHaveLength(31)
+  it('un registro por partido (32), con ganador real null', () => {
+    expect(ELIMINATION_MATCHES).toHaveLength(32)
     for (const m of ELIMINATION_MATCHES) expect(m.ganador).toBeNull()
   })
 })
@@ -49,5 +55,8 @@ describe('RONDA_LABELS / KO_RONDAS', () => {
   it('cubre las 5 rondas en orden', () => {
     expect(KO_RONDAS).toEqual(['dieciseisavos', 'octavos', 'cuartos', 'semis', 'final'])
     for (const r of KO_RONDAS) expect(RONDA_LABELS[r]).toBeTruthy()
+  })
+  it('incluye etiqueta de tercer puesto', () => {
+    expect(RONDA_LABELS.tercer).toBeTruthy()
   })
 })
