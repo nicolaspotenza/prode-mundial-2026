@@ -51,7 +51,7 @@ describe('regresión: el cuelgue de carga (matches wipe) no vuelve a pasar', () 
     expect(backend.matches).toHaveLength(2)
     expect(backend.matches.every((m) => m.estado === 'finalizado')).toBe(true)
     expect(backend.elimination_matches).toEqual([{ id: 'ko_final_1', ganador: 'Argentina' }])
-    expect(backend.seed_version).toBe(3)
+    expect(backend.seed_version).toBe(4)
   })
 
   it('en el PRIMER arranque (backend sin seed_version) sí siembra matches y elimination_matches', async () => {
@@ -61,8 +61,8 @@ describe('regresión: el cuelgue de carga (matches wipe) no vuelve a pasar', () 
     await ensureSeeded(store)
 
     expect(backend.matches).toHaveLength(72)
-    expect(backend.elimination_matches).toHaveLength(31)
-    expect(backend.seed_version).toBe(3)
+    expect(backend.elimination_matches).toHaveLength(32)
+    expect(backend.seed_version).toBe(4)
   })
 
   it('es idempotente: múltiples corridas sobre un backend inicializado nunca pisan matches', async () => {
