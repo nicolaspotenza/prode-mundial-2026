@@ -5,7 +5,7 @@ import { recomputeUserTotals } from './recalc.js'
 
 // Subir esta versión fuerza re-sembrar partidos/cuadro cuando cambia su estructura.
 // Los pronósticos de grupos NO se tocan (van por matchId).
-const SEED_VERSION = 3
+const SEED_VERSION = 4
 
 // Siembra el storage compartido con los partidos y el cuadro hardcodeados.
 // La sincronización luego actualiza estos registros con datos reales.
@@ -43,6 +43,27 @@ export async function ensureSeeded(store = storage) {
       }
     }
     if (limpiado) await recomputeUserTotals(store)
+
+    // Merge no destructivo del cuadro: agrega slots nuevos (p. ej. ko_tercer_1) conservando
+    // el `ganador` real ya detectado. Nunca pisa resultados ni re-siembra desde cero. Solo
+    // corre si ya hay cuadro (length>0): un read vacío transitorio no dispara escritura.
+    const elimActual = (await store.get('elimination_matches')) || []
+    if (elimActual.length) {
+      const porId = new Map(elimActual.map((m) => [m.id, m]))
+      let agregados = false
+      const merged = ELIMINATION_MATCHES.map((base) => {
+        const prev = porId.get(base.id)
+        if (!prev) {
+          agregados = true
+          return { ...base }
+        }
+        return prev
+      })
+      if (agregados || merged.length !== elimActual.length) {
+        await store.set('elimination_matches', merged)
+      }
+    }
+
     await store.set('seed_version', SEED_VERSION)
   }
 }

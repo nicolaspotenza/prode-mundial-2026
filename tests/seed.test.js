@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeEach } from 'vitest'
 import { storage } from '../src/lib/storage.js'
 import { ensureSeeded } from '../src/lib/seed.js'
+import { ELIMINATION_MATCHES } from '../src/data/bracket.js'
 
 beforeEach(() => storage._resetForTests())
 
@@ -15,24 +16,27 @@ describe('ensureSeeded', () => {
     expect(matches).toHaveLength(1)
     expect(matches[0]).toMatchObject({ estado: 'finalizado', resultadoA: 2, resultadoB: 1 })
     // pero igual actualiza la versión (la migración/limpieza one-time corre)
-    expect(await storage.get('seed_version')).toBe(3)
+    expect(await storage.get('seed_version')).toBe(4)
   })
 
-  it('NO pisa elimination_matches existentes cuando la versión está vieja', async () => {
-    await storage.set('seed_version', 2)
-    await storage.set('elimination_matches', [{ id: 'ko_final_1', ganador: 'Argentina' }])
+  it('conserva los ganadores reales de elimination_matches en el bump (merge no destructivo)', async () => {
+    await storage.set('seed_version', 3)
+    // Backend ya inicializado con el cuadro previo (sin ko_tercer_1) y un ganador real.
+    const previo = ELIMINATION_MATCHES.filter((m) => m.id !== 'ko_tercer_1').map((m) => ({ ...m }))
+    previo.find((m) => m.id === 'ko_final_1').ganador = 'Argentina'
+    await storage.set('elimination_matches', previo)
 
     await ensureSeeded()
 
     const ko = await storage.get('elimination_matches')
-    expect(ko).toHaveLength(1)
-    expect(ko[0].ganador).toBe('Argentina')
+    expect(ko.find((m) => m.id === 'ko_final_1').ganador).toBe('Argentina') // conservado
+    expect(ko.find((m) => m.id === 'ko_tercer_1')).toBeDefined() // slot nuevo agregado
   })
 
   it('siembra matches y elimination_matches cuando faltan', async () => {
     await ensureSeeded()
     expect((await storage.get('matches')).length).toBe(72)
-    expect((await storage.get('elimination_matches')).length).toBe(31)
+    expect((await storage.get('elimination_matches')).length).toBe(32)
   })
 
   it('NO re-siembra matches si el backend ya está inicializado y el read viene vacío (fallo transitorio)', async () => {
