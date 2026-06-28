@@ -4,7 +4,7 @@ import { resolveBracket, setBracketPick } from '../src/lib/bracket.js'
 describe('resolveBracket', () => {
   it('R32 usa los equipos fijos', () => {
     const r = resolveBracket([])
-    expect(r['ko_dieciseisavos_1']).toMatchObject({ teamA: 'Alemania', teamB: 'Escocia', ganador: null })
+    expect(r['ko_dieciseisavos_1']).toMatchObject({ teamA: 'Alemania', teamB: 'Paraguay', ganador: null })
   })
 
   it('el ganador de un cruce R32 aparece como lado del octavo padre', () => {
@@ -52,9 +52,9 @@ describe('setBracketPick', () => {
       { userId: 'Ana', matchId: 'ko_dieciseisavos_2', ganador: 'Francia', puntos: null },
       { userId: 'Ana', matchId: 'ko_octavos_1', ganador: 'Alemania', puntos: null },
     ]
-    // re-elijo el hijo 1 a Escocia => "Alemania" en octavos_1 ya no participa
-    const out = setBracketPick(start, 'ko_dieciseisavos_1', 'Escocia', 'Ana')
-    expect(out.find((p) => p.matchId === 'ko_dieciseisavos_1').ganador).toBe('Escocia')
+    // re-elijo el hijo 1 a Paraguay => "Alemania" en octavos_1 ya no participa
+    const out = setBracketPick(start, 'ko_dieciseisavos_1', 'Paraguay', 'Ana')
+    expect(out.find((p) => p.matchId === 'ko_dieciseisavos_1').ganador).toBe('Paraguay')
     expect(out.find((p) => p.matchId === 'ko_octavos_1')).toBeUndefined() // podado
   })
 })

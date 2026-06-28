@@ -18,14 +18,14 @@ const TITLES = {
   home: 'Inicio',
   grupos: 'Tabla de Grupos',
   fase: 'Fase de Grupos',
-  llaves: 'Clasificados',
+  llaves: 'Llaves',
   ranking: 'Ranking',
 }
 
 export default function App() {
   const { alias, register, change } = useCurrentUser()
   const { syncing, lastSync, tick, runSync } = useSync()
-  const [tab, setTab] = useState('home')
+  const [tab, setTab] = useState('llaves') // las llaves son la pantalla de inicio
   const [openMatch, setOpenMatch] = useState(null)
   const [canMigrate, setCanMigrate] = useState(false)
   const [migrating, setMigrating] = useState(false)

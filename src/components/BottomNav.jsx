@@ -1,10 +1,11 @@
 import { Home, Trophy, ListOrdered, GitBranch, BarChart3 } from 'lucide-react'
 
+// Las llaves van primeras (pantalla de inicio de la app).
 const TABS = [
+  { id: 'llaves', label: 'Llaves', Icon: GitBranch },
   { id: 'home', label: 'Home', Icon: Home },
   { id: 'grupos', label: 'Grupos', Icon: Trophy },
   { id: 'fase', label: 'Fase', Icon: ListOrdered },
-  { id: 'llaves', label: 'Llaves', Icon: GitBranch },
   { id: 'ranking', label: 'Ranking', Icon: BarChart3 },
 ]
 

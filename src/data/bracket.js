@@ -7,22 +7,22 @@
 // enfrenta a los ganadores de los cruces (2i-1) y (2i) de la ronda anterior.
 // Mitad izquierda = 1..8, mitad derecha = 9..16; se cruzan en la final.
 export const DIECISEISAVOS = [
-  { id: 'ko_dieciseisavos_1', teamA: 'Alemania', teamB: 'Escocia' },
+  { id: 'ko_dieciseisavos_1', teamA: 'Alemania', teamB: 'Paraguay' },
   { id: 'ko_dieciseisavos_2', teamA: 'Francia', teamB: 'Suecia' },
-  { id: 'ko_dieciseisavos_3', teamA: 'República de Corea', teamB: 'Suiza' },
+  { id: 'ko_dieciseisavos_3', teamA: 'Sudáfrica', teamB: 'Canadá' },
   { id: 'ko_dieciseisavos_4', teamA: 'Países Bajos', teamB: 'Marruecos' },
-  { id: 'ko_dieciseisavos_5', teamA: 'Colombia', teamB: 'Ghana' },
+  { id: 'ko_dieciseisavos_5', teamA: 'Portugal', teamB: 'Croacia' },
   { id: 'ko_dieciseisavos_6', teamA: 'España', teamB: 'Austria' },
-  { id: 'ko_dieciseisavos_7', teamA: 'Estados Unidos', teamB: 'Argelia' },
-  { id: 'ko_dieciseisavos_8', teamA: 'Egipto', teamB: 'Chequia' },
+  { id: 'ko_dieciseisavos_7', teamA: 'Estados Unidos', teamB: 'Bosnia y Herzegovina' },
+  { id: 'ko_dieciseisavos_8', teamA: 'Bélgica', teamB: 'Senegal' },
   { id: 'ko_dieciseisavos_9', teamA: 'Brasil', teamB: 'Japón' },
   { id: 'ko_dieciseisavos_10', teamA: 'Costa de Marfil', teamB: 'Noruega' },
-  { id: 'ko_dieciseisavos_11', teamA: 'México', teamB: 'Cabo Verde' },
+  { id: 'ko_dieciseisavos_11', teamA: 'México', teamB: 'Ecuador' },
   { id: 'ko_dieciseisavos_12', teamA: 'Inglaterra', teamB: 'DR Congo' },
-  { id: 'ko_dieciseisavos_13', teamA: 'Argentina', teamB: 'Uruguay' },
-  { id: 'ko_dieciseisavos_14', teamA: 'Australia', teamB: 'Irán' },
-  { id: 'ko_dieciseisavos_15', teamA: 'Canadá', teamB: 'Bélgica' },
-  { id: 'ko_dieciseisavos_16', teamA: 'Portugal', teamB: 'Paraguay' },
+  { id: 'ko_dieciseisavos_13', teamA: 'Argentina', teamB: 'Cabo Verde' },
+  { id: 'ko_dieciseisavos_14', teamA: 'Australia', teamB: 'Egipto' },
+  { id: 'ko_dieciseisavos_15', teamA: 'Suiza', teamB: 'Argelia' },
+  { id: 'ko_dieciseisavos_16', teamA: 'Colombia', teamB: 'Ghana' },
 ]
 
 const ROUND_COUNTS = [

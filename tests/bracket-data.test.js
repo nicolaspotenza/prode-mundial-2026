@@ -11,8 +11,8 @@ describe('DIECISEISAVOS', () => {
     expect(new Set(teams).size).toBe(32)
     for (const t of teams) expect(ALL_TEAMS.has(t)).toBe(true)
   })
-  it('primer cruce es Alemania vs Escocia', () => {
-    expect(DIECISEISAVOS[0]).toMatchObject({ teamA: 'Alemania', teamB: 'Escocia' })
+  it('primer cruce es Alemania vs Paraguay', () => {
+    expect(DIECISEISAVOS[0]).toMatchObject({ teamA: 'Alemania', teamB: 'Paraguay' })
   })
 })
 
