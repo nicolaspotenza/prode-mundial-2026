@@ -10,9 +10,11 @@ import ScoringInfo from '../components/ScoringInfo.jsx'
 // `mirror` solo invierte la disposición visual (bandera a la derecha) para el lado derecho
 // del cuadro; no cambia ningún comportamiento.
 function TeamRow({ team, picked, real, onPick, mirror }) {
-  const disabled = !team
-  const showResult = picked && !!real
+  const cerrado = !!real
+  const disabled = !team || cerrado
+  const showResult = picked && cerrado
   const acerto = showResult && real === team
+  const esGanadorReal = cerrado && real === team
   return (
     <button
       type="button"
@@ -22,12 +24,17 @@ function TeamRow({ team, picked, real, onPick, mirror }) {
       aria-label={team || 'A definir'}
       className={`flex w-full items-center gap-2 rounded-lg px-2 py-1.5 text-sm transition
         ${mirror ? 'flex-row-reverse text-right' : 'text-left'}
-        ${picked ? 'bg-pitch/20 ring-1 ring-pitch' : 'bg-bg hover:bg-white/5'}
-        ${disabled ? 'cursor-default opacity-40' : ''}`}
+        ${picked ? 'bg-pitch/20 ring-1 ring-pitch' : esGanadorReal ? 'bg-trophy/10 ring-1 ring-trophy/40' : 'bg-bg hover:bg-white/5'}
+        ${disabled ? 'cursor-default' : ''}
+        ${!team ? 'opacity-40' : ''}`}
     >
       {team ? <Flag team={team} className="h-4 w-6" /> : <span className="h-4 w-6 rounded-sm bg-white/10" />}
       <span className="flex-1 truncate">{team || 'A definir'}</span>
-      {showResult && <span>{acerto ? '🟢' : '🔴'}</span>}
+      {showResult && (
+        <span className={`text-xs font-semibold ${acerto ? 'text-pitch' : 'text-red-400'}`}>
+          {acerto ? '🟢 +20' : '🔴 0'}
+        </span>
+      )}
     </button>
   )
 }
@@ -35,7 +42,7 @@ function TeamRow({ team, picked, real, onPick, mirror }) {
 // Un cruce con sus dos equipos. Tocar de nuevo el elegido lo deselecciona.
 function MatchCard({ teamA, teamB, ganador, real, onPick, mirror }) {
   const toggle = (team) => {
-    if (!team) return
+    if (!team || real) return
     onPick(team === ganador ? null : team)
   }
   return (
@@ -76,8 +83,8 @@ export default function Bracket({ alias, tick }) {
     getKnockoutPredictions(alias).then(setPreds).catch(() => {})
   }, [alias, tick])
 
-  const resolved = useMemo(() => resolveBracket(preds), [preds])
   const realById = useMemo(() => new Map(matches.map((m) => [m.id, m.ganador])), [matches])
+  const resolved = useMemo(() => resolveBracket(preds, realById), [preds, realById])
 
   const handlePick = async (matchId, team) => {
     try {
@@ -165,6 +172,33 @@ export default function Bracket({ alias, tick }) {
                 )}
                 <span className="text-center text-sm font-semibold">{campeon || '—'}</span>
               </div>
+
+              {/* 3.º y 4.º puesto: lo juegan los perdedores de las semis. */}
+              {(() => {
+                const tercer = KO_MATCHES.find((m) => m.esTercerPuesto)
+                const tr = resolved[tercer.id] || { teamA: null, teamB: null, ganador: null }
+                const realTercer = realById.get(tercer.id) || null
+                const tercero = realTercer || tr.ganador
+                const cuarto = tercero ? (tercero === tr.teamA ? tr.teamB : tr.teamA) : null
+                return (
+                  <div className="w-full space-y-1">
+                    <h4 className="text-center text-[11px] font-semibold uppercase tracking-wide text-white/40">
+                      {RONDA_LABELS.tercer}
+                    </h4>
+                    <MatchCard
+                      teamA={tr.teamA}
+                      teamB={tr.teamB}
+                      ganador={tr.ganador}
+                      real={realTercer}
+                      onPick={(team) => handlePick(tercer.id, team)}
+                    />
+                    <p className="text-center text-xs text-white/60">
+                      🥉 3.º: <span className="font-semibold text-white/80">{tercero || '—'}</span>
+                      {' · '}4.º: <span className="font-semibold text-white/80">{cuarto || '—'}</span>
+                    </p>
+                  </div>
+                )
+              })()}
             </div>
           </div>
 
