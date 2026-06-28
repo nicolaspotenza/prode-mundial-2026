@@ -56,9 +56,21 @@ export async function fetchSportsDB(fetchImpl = fetch) {
   const base = `https://www.thesportsdb.com/api/v1/json/${key}`
   const urls = [
     `${base}/eventsseason.php?id=${LEAGUE}&s=${SEASON}`,
+    // Fase de grupos: TheSportsDB numera las fechas como rondas 1, 2 y 3.
     `${base}/eventsround.php?id=${LEAGUE}&r=1&s=${SEASON}`,
     `${base}/eventsround.php?id=${LEAGUE}&r=2&s=${SEASON}`,
     `${base}/eventsround.php?id=${LEAGUE}&r=3&s=${SEASON}`,
+    // Eliminatorias: TheSportsDB numera las rondas KO por cantidad de equipos
+    // (32 = Dieciseisavos, 16 = Octavos, 8 = Cuartos, 4 = Semis). Sin estos endpoints
+    // los partidos KO nunca llegan al sync y el cuadro no muestra fecha/estado.
+    `${base}/eventsround.php?id=${LEAGUE}&r=32&s=${SEASON}`,
+    `${base}/eventsround.php?id=${LEAGUE}&r=16&s=${SEASON}`,
+    `${base}/eventsround.php?id=${LEAGUE}&r=8&s=${SEASON}`,
+    `${base}/eventsround.php?id=${LEAGUE}&r=4&s=${SEASON}`,
+    // Próximos y últimos partidos: cubren KO programados/en vivo/finalizados sin depender
+    // del número exacto de ronda (p. ej. la final y el 3er puesto).
+    `${base}/eventsnextleague.php?id=${LEAGUE}`,
+    `${base}/eventspastleague.php?id=${LEAGUE}`,
   ]
   const all = []
   const seen = new Set()
