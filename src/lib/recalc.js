@@ -29,6 +29,31 @@ export async function recomputeMatchForAllUsers(matchId, ganadorReal) {
   await recomputeUserTotals()
 }
 
+// Recálculo de eliminatorias en UNA sola pasada O(usuarios). Recibe { matchId: ganadorReal }
+// de los cruces que cambiaron en este sync. Escribe el pronóstico de un usuario solo si su
+// puntaje cambió (idempotente) y recalcula totales UNA vez al final. Si no hay cambios, no
+// hace nada. Esta forma de un-solo-paso es la que evita el "storm" (no es O(cruces×usuarios)).
+export async function recomputeKnockoutForAllUsers(winnersById, store = storage) {
+  if (!winnersById || Object.keys(winnersById).length === 0) return
+  const users = (await store.get('users')) || []
+  for (const u of users) {
+    const key = `pronosticos_eliminatorias:${u.alias}`
+    const list = (await store.get(key)) || []
+    let changed = false
+    for (const p of list) {
+      if (Object.prototype.hasOwnProperty.call(winnersById, p.matchId)) {
+        const pts = calcularPuntosEliminatoria(p.ganador, winnersById[p.matchId])
+        if (pts !== p.puntos) {
+          p.puntos = pts
+          changed = true
+        }
+      }
+    }
+    if (changed) await store.set(key, list)
+  }
+  await recomputeUserTotals(store)
+}
+
 export async function recomputeUserTotals(store = storage) {
   const users = (await store.get('users')) || []
   for (const u of users) {

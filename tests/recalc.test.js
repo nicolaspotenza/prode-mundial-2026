@@ -1,6 +1,11 @@
 import { describe, it, expect, beforeEach } from 'vitest'
 import { storage } from '../src/lib/storage.js'
-import { recomputeGroupMatchForAllUsers, recomputeMatchForAllUsers, recomputeUserTotals } from '../src/lib/recalc.js'
+import {
+  recomputeGroupMatchForAllUsers,
+  recomputeMatchForAllUsers,
+  recomputeUserTotals,
+  recomputeKnockoutForAllUsers,
+} from '../src/lib/recalc.js'
 
 beforeEach(() => storage._resetForTests())
 
@@ -50,5 +55,55 @@ describe('recomputeUserTotals', () => {
     expect(u.puntosGrupos).toBe(10)
     expect(u.puntosEliminatorias).toBe(20)
     expect(u.totalPuntos).toBe(45) // 10 + 20 + 15
+  })
+})
+
+describe('recomputeKnockoutForAllUsers', () => {
+  it('otorga +20 al acertar y 0 al errar, en una sola pasada', async () => {
+    await storage.set('users', [
+      { alias: 'Ana', puntosGrupos: 0, puntosEliminatorias: 0 },
+      { alias: 'Beto', puntosGrupos: 0, puntosEliminatorias: 0 },
+    ])
+    await storage.set('pronosticos_eliminatorias:Ana', [
+      { userId: 'Ana', matchId: 'ko_dieciseisavos_1', ganador: 'Paraguay', puntos: null },
+    ])
+    await storage.set('pronosticos_eliminatorias:Beto', [
+      { userId: 'Beto', matchId: 'ko_dieciseisavos_1', ganador: 'Alemania', puntos: null },
+    ])
+
+    await recomputeKnockoutForAllUsers({ ko_dieciseisavos_1: 'Paraguay' })
+
+    const ana = (await storage.get('users')).find((u) => u.alias === 'Ana')
+    const beto = (await storage.get('users')).find((u) => u.alias === 'Beto')
+    expect(ana.puntosEliminatorias).toBe(20)
+    expect(beto.puntosEliminatorias).toBe(0)
+  })
+
+  it('es idempotente: re-ejecutar con el mismo resultado no reescribe el pronóstico', async () => {
+    await storage.set('users', [{ alias: 'Ana', puntosEliminatorias: 0 }])
+    await storage.set('pronosticos_eliminatorias:Ana', [
+      { userId: 'Ana', matchId: 'ko_dieciseisavos_1', ganador: 'Paraguay', puntos: 20 },
+    ])
+
+    let writes = 0
+    const base = storage
+    const spy = {
+      get: (k) => base.get(k),
+      set: (k, v) => {
+        if (k.startsWith('pronosticos_eliminatorias:')) writes++
+        return base.set(k, v)
+      },
+    }
+
+    await recomputeKnockoutForAllUsers({ ko_dieciseisavos_1: 'Paraguay' }, spy)
+    expect(writes).toBe(0) // ya estaba en 20 → no se reescribe el pronóstico
+  })
+
+  it('winnersById vacío no toca a ningún usuario', async () => {
+    let writes = 0
+    const base = storage
+    const spy = { get: (k) => base.get(k), set: (k, v) => { writes++; return base.set(k, v) } }
+    await recomputeKnockoutForAllUsers({}, spy)
+    expect(writes).toBe(0)
   })
 })
