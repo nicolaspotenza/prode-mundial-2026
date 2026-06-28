@@ -64,6 +64,28 @@ describe('applyKnockout', () => {
     expect(await storage.get('elimination_matches')).toBeNull()
   })
 
+  it('captura estado en_vivo y minuto sin definir ganador', async () => {
+    await seedElim()
+    const { resolved } = await applyKnockout([
+      { home: 'Alemania', away: 'Paraguay', status: 'live', rA: 0, rB: 0, minuto: "57'" },
+    ])
+    expect(resolved).toEqual([]) // en vivo no define ganador
+    const m = (await storage.get('elimination_matches')).find((x) => x.id === 'ko_dieciseisavos_1')
+    expect(m.estado).toBe('en_vivo')
+    expect(m.minuto).toBe("57'")
+    expect(m.ganador).toBeNull()
+  })
+
+  it('captura fecha/estado programado de un cruce R32 aún no jugado', async () => {
+    await seedElim()
+    await applyKnockout([
+      { home: 'Alemania', away: 'Paraguay', status: 'scheduled', rA: null, rB: null, fecha: '2026-07-01T18:00:00Z' },
+    ])
+    const m = (await storage.get('elimination_matches')).find((x) => x.id === 'ko_dieciseisavos_1')
+    expect(m.estado).toBe('programado')
+    expect(m.fecha).toBe('2026-07-01T18:00:00Z')
+  })
+
   it('idempotente: segundo sync sin novedades no reprocesa', async () => {
     await seedElim()
     const updates = [{ home: 'Alemania', away: 'Paraguay', status: 'finished', rA: 2, rB: 1 }]

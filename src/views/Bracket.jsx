@@ -4,7 +4,41 @@ import { useStored } from '../hooks/useStored.js'
 import { getKnockoutPredictions, setKnockoutPrediction } from '../lib/predictions.js'
 import { resolveBracket } from '../lib/bracket.js'
 import Flag from '../components/Flag.jsx'
+import LiveBadge from '../components/LiveBadge.jsx'
 import ScoringInfo from '../components/ScoringInfo.jsx'
+
+// Cabecera de un cruce: muestra el estado (Final / EN VIVO / a jugarse) y la fecha y hora,
+// reusando el mismo criterio y look que las tarjetas de Home. `meta` es el registro de
+// elimination_matches (estado/fecha/minuto), que completa applyKnockout desde la fuente.
+function CrossHeader({ meta, mirror }) {
+  if (!meta || !meta.estado) return null
+  const { estado, fecha, minuto } = meta
+  if (estado === 'en_vivo') {
+    return (
+      <div className={`mb-1 flex ${mirror ? 'justify-start' : 'justify-end'}`}>
+        <LiveBadge minuto={minuto} />
+      </div>
+    )
+  }
+  const dot = estado === 'finalizado' ? 'bg-pitch' : 'bg-white/30'
+  const label = estado === 'finalizado' ? 'Final' : 'A jugarse'
+  const fechaTxt = fecha
+    ? new Date(fecha).toLocaleString('es-AR', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })
+    : ''
+  return (
+    <div
+      className={`mb-1 flex items-center justify-between gap-1 text-[10px] text-white/45 ${
+        mirror ? 'flex-row-reverse' : ''
+      }`}
+    >
+      <span className={`flex items-center gap-1 ${mirror ? 'flex-row-reverse' : ''}`}>
+        <span className={`h-1.5 w-1.5 rounded-full ${dot}`} />
+        {label}
+      </span>
+      {fechaTxt && <span className="text-white/40">{fechaTxt}</span>}
+    </div>
+  )
+}
 
 // Una fila de equipo tocable dentro de un cruce. Si no hay equipo aún, muestra "A definir".
 // `mirror` solo invierte la disposición visual (bandera a la derecha) para el lado derecho
@@ -40,13 +74,14 @@ function TeamRow({ team, picked, real, onPick, mirror }) {
 }
 
 // Un cruce con sus dos equipos. Tocar de nuevo el elegido lo deselecciona.
-function MatchCard({ teamA, teamB, ganador, real, onPick, mirror }) {
+function MatchCard({ teamA, teamB, ganador, real, meta, onPick, mirror }) {
   const toggle = (team) => {
     if (!team || real) return
     onPick(team === ganador ? null : team)
   }
   return (
     <div className="space-y-1 rounded-xl bg-surface p-2">
+      <CrossHeader meta={meta} mirror={mirror} />
       <TeamRow team={teamA} picked={!!ganador && ganador === teamA} real={real} onPick={toggle} mirror={mirror} />
       <TeamRow team={teamB} picked={!!ganador && ganador === teamB} real={real} onPick={toggle} mirror={mirror} />
     </div>
@@ -84,6 +119,7 @@ export default function Bracket({ alias, tick }) {
   }, [alias, tick])
 
   const realById = useMemo(() => new Map(matches.map((m) => [m.id, m.ganador])), [matches])
+  const metaById = useMemo(() => new Map(matches.map((m) => [m.id, m])), [matches])
   const resolved = useMemo(() => resolveBracket(preds, realById), [preds, realById])
 
   const handlePick = async (matchId, team) => {
@@ -120,6 +156,7 @@ export default function Bracket({ alias, tick }) {
                 teamB={r.teamB}
                 ganador={r.ganador}
                 real={realById.get(m.id) || null}
+                meta={metaById.get(m.id) || null}
                 mirror={mirror}
                 onPick={(team) => handlePick(m.id, team)}
               />
@@ -160,6 +197,7 @@ export default function Bracket({ alias, tick }) {
                   teamB={finalResolved.teamB}
                   ganador={finalResolved.ganador}
                   real={realById.get(finalMatch.id) || null}
+                  meta={metaById.get(finalMatch.id) || null}
                   onPick={(team) => handlePick(finalMatch.id, team)}
                 />
               </div>
@@ -190,6 +228,7 @@ export default function Bracket({ alias, tick }) {
                       teamB={tr.teamB}
                       ganador={tr.ganador}
                       real={realTercer}
+                      meta={metaById.get(tercer.id) || null}
                       onPick={(team) => handlePick(tercer.id, team)}
                     />
                     <p className="text-center text-xs text-white/60">
