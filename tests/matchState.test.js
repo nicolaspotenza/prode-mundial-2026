@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { deriveEstado, isBloqueado, isBettingOpen } from '../src/lib/matchState.js'
+import { deriveEstado, isBloqueado, isBettingOpen, isKnockoutBettingOpen } from '../src/lib/matchState.js'
 
 describe('deriveEstado', () => {
   it('source finished overrides everything', () =>
@@ -34,4 +34,24 @@ describe('isBettingOpen', () => {
     expect(isBettingOpen({ estado: 'en_vivo', fecha: '2026-06-20T16:00:00Z' }, now)).toBe(false))
   it('closed when finalizado', () =>
     expect(isBettingOpen({ estado: 'finalizado', fecha: '2026-06-20T16:00:00Z' }, now)).toBe(false))
+})
+
+describe('isKnockoutBettingOpen (cierra 30 min antes del kickoff)', () => {
+  const now = Date.UTC(2026, 5, 28, 18, 0, 0) // 2026-06-28 18:00Z
+  it('abierto cuando no hay meta todavía (aún no se conoce la fecha)', () =>
+    expect(isKnockoutBettingOpen(null, now)).toBe(true))
+  it('abierto cuando hay cruce pero sin fecha conocida', () =>
+    expect(isKnockoutBettingOpen({ estado: 'programado' }, now)).toBe(true))
+  it('abierto cuando faltan más de 30 min para el kickoff', () =>
+    expect(isKnockoutBettingOpen({ estado: 'programado', fecha: '2026-06-28T19:00:00Z' }, now)).toBe(true))
+  it('cerrado cuando faltan menos de 30 min', () =>
+    expect(isKnockoutBettingOpen({ estado: 'programado', fecha: '2026-06-28T18:20:00Z' }, now)).toBe(false))
+  it('cerrado justo en el límite de 30 min', () =>
+    expect(isKnockoutBettingOpen({ estado: 'programado', fecha: '2026-06-28T18:30:00Z' }, now)).toBe(false))
+  it('cerrado cuando el kickoff ya pasó', () =>
+    expect(isKnockoutBettingOpen({ estado: 'programado', fecha: '2026-06-28T17:00:00Z' }, now)).toBe(false))
+  it('cerrado cuando está en vivo', () =>
+    expect(isKnockoutBettingOpen({ estado: 'en_vivo', fecha: '2026-06-30T16:00:00Z' }, now)).toBe(false))
+  it('cerrado cuando está finalizado', () =>
+    expect(isKnockoutBettingOpen({ estado: 'finalizado', fecha: '2026-06-25T16:00:00Z' }, now)).toBe(false))
 })

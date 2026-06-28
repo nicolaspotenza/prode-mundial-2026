@@ -20,6 +20,19 @@ export function isBettingOpen(match, now = Date.now()) {
   return new Date(match.fecha).getTime() - BETTING_CLOSE_MS > now
 }
 
+// Eliminatorias: la predicción de un cruce se cierra 30 min antes del kickoff. A diferencia
+// de los grupos, un cruce puede no tener datos aún (la fuente todavía no lo programó): en ese
+// caso la predicción sigue ABIERTA (no se conoce fecha). Se cierra si ya empezó/terminó, o si
+// falta media hora o menos para el inicio.
+export const KO_BETTING_CLOSE_MS = 30 * 60 * 1000 // 30 min
+
+export function isKnockoutBettingOpen(meta, now = Date.now()) {
+  if (!meta) return true
+  if (meta.estado === 'en_vivo' || meta.estado === 'finalizado') return false
+  if (meta.fecha && new Date(meta.fecha).getTime() - KO_BETTING_CLOSE_MS <= now) return false
+  return true
+}
+
 // Un partido no puede quedar "en vivo" para siempre si la fuente se cuelga en un estado
 // live viejo (la key gratuita de TheSportsDB no siempre marca FT) o deja de reportarlo.
 // Pasado este margen desde el kickoff lo damos por finalizado con el último marcador

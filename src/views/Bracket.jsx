@@ -3,6 +3,7 @@ import { KO_MATCHES, RONDA_LABELS } from '../data/bracket.js'
 import { useStored } from '../hooks/useStored.js'
 import { getKnockoutPredictions, setKnockoutPrediction } from '../lib/predictions.js'
 import { resolveBracket } from '../lib/bracket.js'
+import { isKnockoutBettingOpen } from '../lib/matchState.js'
 import Flag from '../components/Flag.jsx'
 import LiveBadge from '../components/LiveBadge.jsx'
 import ScoringInfo from '../components/ScoringInfo.jsx'
@@ -17,6 +18,8 @@ function CrossHeader({ meta, mirror }) {
   const fechaTxt = fecha
     ? new Date(fecha).toLocaleString('es-AR', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })
     : ''
+  // Apuesta cerrada (30 min antes) pero el partido aún no empezó: se avisa "Cerrada".
+  const cerradaApuesta = estado !== 'finalizado' && estado !== 'en_vivo' && !isKnockoutBettingOpen(meta)
   // Indicador de estado a la izquierda: badge EN VIVO en juego; dot + etiqueta si no.
   const left =
     estado === 'en_vivo' ? (
@@ -24,7 +27,7 @@ function CrossHeader({ meta, mirror }) {
     ) : (
       <span className={`flex items-center gap-1 ${mirror ? 'flex-row-reverse' : ''}`}>
         <span className={`h-1.5 w-1.5 rounded-full ${estado === 'finalizado' ? 'bg-pitch' : 'bg-white/30'}`} />
-        {estado === 'finalizado' ? 'Final' : 'A jugarse'}
+        {estado === 'finalizado' ? 'Final' : cerradaApuesta ? '🔒 Cerrada' : 'A jugarse'}
       </span>
     )
   return (
@@ -42,12 +45,11 @@ function CrossHeader({ meta, mirror }) {
 // Una fila de equipo tocable dentro de un cruce. Si no hay equipo aún, muestra "A definir".
 // `mirror` solo invierte la disposición visual (bandera a la derecha) para el lado derecho
 // del cuadro; no cambia ningún comportamiento.
-function TeamRow({ team, picked, real, onPick, mirror }) {
-  const cerrado = !!real
-  const disabled = !team || cerrado
-  const showResult = picked && cerrado
+function TeamRow({ team, picked, real, locked, onPick, mirror }) {
+  const disabled = !team || locked
+  const showResult = picked && !!real
   const acerto = showResult && real === team
-  const esGanadorReal = cerrado && real === team
+  const esGanadorReal = !!real && real === team
   return (
     <button
       type="button"
@@ -74,15 +76,17 @@ function TeamRow({ team, picked, real, onPick, mirror }) {
 
 // Un cruce con sus dos equipos. Tocar de nuevo el elegido lo deselecciona.
 function MatchCard({ teamA, teamB, ganador, real, meta, onPick, mirror }) {
+  // Cruce bloqueado: ya tiene resultado real, o la apuesta cerró (30 min antes del kickoff).
+  const locked = !!real || !isKnockoutBettingOpen(meta)
   const toggle = (team) => {
-    if (!team || real) return
+    if (!team || locked) return
     onPick(team === ganador ? null : team)
   }
   return (
     <div className="space-y-1 rounded-xl bg-surface p-2">
       <CrossHeader meta={meta} mirror={mirror} />
-      <TeamRow team={teamA} picked={!!ganador && ganador === teamA} real={real} onPick={toggle} mirror={mirror} />
-      <TeamRow team={teamB} picked={!!ganador && ganador === teamB} real={real} onPick={toggle} mirror={mirror} />
+      <TeamRow team={teamA} picked={!!ganador && ganador === teamA} real={real} locked={locked} onPick={toggle} mirror={mirror} />
+      <TeamRow team={teamB} picked={!!ganador && ganador === teamB} real={real} locked={locked} onPick={toggle} mirror={mirror} />
     </div>
   )
 }
