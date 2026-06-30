@@ -95,6 +95,47 @@ describe('applyKnockout', () => {
     expect(second.resolved).toEqual([]) // ya estaba resuelto → no vuelve a aparecer
   })
 
+  it('resuelve el ganador por penales cuando la fuente lo indica (status AP)', async () => {
+    await seedElim()
+    await storage.set('users', [{ alias: 'Ana', puntosEliminatorias: 0 }])
+    await storage.set('pronosticos_eliminatorias:Ana', [
+      { userId: 'Ana', matchId: 'ko_dieciseisavos_1', ganador: 'Paraguay', puntos: null },
+    ])
+    // Empate en el marcador (1-1) pero la fuente marca al que avanza por penales.
+    await applyKnockout([{ home: 'Germany', away: 'Paraguay', status: 'finished', rA: 1, rB: 1, ganador: 'Paraguay' }])
+    const m = (await storage.get('elimination_matches')).find((x) => x.id === 'ko_dieciseisavos_1')
+    expect(m.ganador).toBe('Paraguay')
+    const ana = (await storage.get('users')).find((u) => u.alias === 'Ana')
+    expect(ana.puntosEliminatorias).toBe(20)
+  })
+
+  it('safety-net: finaliza un cruce trabado en vivo pasado el margen KO', async () => {
+    const elim = ELIMINATION_MATCHES.map((m) => ({ ...m }))
+    const m1 = elim.find((m) => m.id === 'ko_dieciseisavos_1')
+    m1.estado = 'en_vivo'
+    m1.fecha = '2026-06-29T20:30:00Z'
+    m1.resultadoA = 1
+    m1.resultadoB = 1
+    await storage.set('elimination_matches', elim)
+    const now = Date.parse('2026-06-30T22:00:00Z') // >25h después
+    // Aún sin updates de la fuente, el barrido debe sacarlo de "en vivo".
+    await applyKnockout([], storage, now)
+    const after = (await storage.get('elimination_matches')).find((m) => m.id === 'ko_dieciseisavos_1')
+    expect(after.estado).toBe('finalizado')
+  })
+
+  it('safety-net: NO finaliza un cruce que recién empezó (dentro del margen)', async () => {
+    const elim = ELIMINATION_MATCHES.map((m) => ({ ...m }))
+    const m2 = elim.find((m) => m.id === 'ko_dieciseisavos_2')
+    m2.estado = 'en_vivo'
+    m2.fecha = '2026-06-30T21:00:00Z'
+    await storage.set('elimination_matches', elim)
+    const now = Date.parse('2026-06-30T22:00:00Z') // solo 1h después
+    await applyKnockout([], storage, now)
+    const after = (await storage.get('elimination_matches')).find((m) => m.id === 'ko_dieciseisavos_2')
+    expect(after.estado).toBe('en_vivo')
+  })
+
   it('3er puesto: ganador es 3.º, detectado por su propio partido', async () => {
     // El cuadro real se resuelve por cascada: los equipos de las semis se derivan de los
     // ganadores reales de cuartos. Sembramos esa cadena para que el 3er puesto (perdedores

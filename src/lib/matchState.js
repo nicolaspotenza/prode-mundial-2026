@@ -41,3 +41,9 @@ export function isKnockoutBettingOpen(meta, now = Date.now()) {
 // riesgo de cerrar uno todavía en juego.
 export const MAX_MATCH_MS = 135 * 60 * 1000
 
+// Eliminatorias: pueden ir a alargue + penales, así que el margen es mayor que el de grupos
+// (90' + descuento + entretiempo + 30' ET + pausas + tanda de penales + retraso de la fuente).
+// Pasado este margen desde el kickoff, un cruce trabado "en vivo" (la fuente gratuita a veces
+// no marca el FT/AP) se da por finalizado para que no quede en vivo indefinidamente.
+export const KO_MAX_MATCH_MS = 195 * 60 * 1000 // 3h15
+

@@ -23,6 +23,8 @@ describe('thesportsdb mapStatus', () => {
   it('FT -> finished', () => expect(mapStatus('FT')).toBe('finished'))
   it('2H -> live', () => expect(mapStatus('2H')).toBe('live'))
   it('NS -> scheduled', () => expect(mapStatus('NS')).toBe('scheduled'))
+  it('AP (after penalties) -> finished, no live', () => expect(mapStatus('AP')).toBe('finished'))
+  it('AET (after extra time) -> finished', () => expect(mapStatus('AET')).toBe('finished'))
 })
 
 describe('thesportsdb mapEvent', () => {
@@ -35,12 +37,29 @@ describe('thesportsdb mapEvent', () => {
       strStatus: 'FT',
       strProgress: null,
     })
-    expect(out).toEqual({ home: 'Mexico', away: 'South Africa', status: 'finished', rA: 2, rB: 0, minuto: null, eventos: [], fecha: null })
+    expect(out).toEqual({ home: 'Mexico', away: 'South Africa', status: 'finished', rA: 2, rB: 0, minuto: null, eventos: [], fecha: null, ganador: null })
   })
   it('null scores for not-started', () => {
     const out = mapEvent({ strHomeTeam: 'Canada', strAwayTeam: 'Qatar', intHomeScore: null, intAwayScore: null, strStatus: 'NS' })
     expect(out.rA).toBeNull()
     expect(out.status).toBe('scheduled')
+  })
+  it('expone el ganador por penales (AP) desde los marcadores extra', () => {
+    const out = mapEvent({
+      strHomeTeam: 'Germany',
+      strAwayTeam: 'Paraguay',
+      intHomeScore: '1',
+      intAwayScore: '1',
+      intHomeScoreExtra: '3',
+      intAwayScoreExtra: '4',
+      strStatus: 'AP',
+    })
+    expect(out.status).toBe('finished')
+    expect(out.ganador).toBe('Paraguay')
+  })
+  it('sin definición por penales, ganador queda null (se resuelve por goles)', () => {
+    const out = mapEvent({ strHomeTeam: 'Brazil', strAwayTeam: 'Japan', intHomeScore: '2', intAwayScore: '1', strStatus: 'FT' })
+    expect(out.ganador).toBeNull()
   })
   it('captures kickoff from strTimestamp (normalized to UTC ISO)', () => {
     const out = mapEvent({ strHomeTeam: 'A', strAwayTeam: 'B', strStatus: 'NS', strTimestamp: '2026-06-18T19:00:00' })

@@ -8,9 +8,22 @@ const SEASON = '2026'
 
 function mapStatus(strStatus) {
   const s = (strStatus || '').toUpperCase()
-  if (['FT', 'AET', 'PEN', 'MATCH FINISHED', 'FINISHED'].includes(s)) return 'finished'
+  // Finalizados (exactos): incluye AP = After Penalties y AET = After Extra Time. OJO: el
+  // chequeo de finished va PRIMERO porque el de live usa `includes('P')` y "AP" contiene 'P'
+  // (antes "AP" caía erróneamente en live y los cruces por penales quedaban en vivo para siempre).
+  if (['FT', 'AET', 'PEN', 'AP', 'MATCH FINISHED', 'FINISHED'].includes(s)) return 'finished'
   if (['1H', '2H', 'HT', 'ET', 'BT', 'P', 'LIVE', 'INPLAY'].some((x) => s.includes(x))) return 'live'
   return 'scheduled'
+}
+
+// Ganador por definición de penales: TheSportsDB pone el marcador del shootout en
+// intHomeScoreExtra / intAwayScoreExtra (el intHomeScore/intAwayScore queda 1-1, etc.).
+// Devuelve el nombre del equipo que avanza, o null si no hubo penales (se resuelve por goles).
+function penaltyWinner(e) {
+  const ph = toInt(e.intHomeScoreExtra)
+  const pa = toInt(e.intAwayScoreExtra)
+  if (ph == null || pa == null || ph === pa) return null
+  return ph > pa ? e.strHomeTeam : e.strAwayTeam
 }
 
 function toInt(v) {
@@ -38,6 +51,9 @@ function mapEvent(e) {
     minuto: e.strProgress || null,
     eventos: [],
     fecha: kickoffISO(e),
+    // Equipo que avanza si el cruce se definió por penales (applyKnockout lo prioriza
+    // sobre los goles, que en ese caso quedan empatados).
+    ganador: penaltyWinner(e),
   }
 }
 

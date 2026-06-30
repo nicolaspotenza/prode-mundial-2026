@@ -3,7 +3,7 @@ import { KO_MATCHES } from '../data/bracket.js'
 import { canonicalTeam } from '../data/aliases.js'
 import { resolveBracket } from './bracket.js'
 import { recomputeKnockoutForAllUsers } from './recalc.js'
-import { deriveEstado } from './matchState.js'
+import { deriveEstado, KO_MAX_MATCH_MS } from './matchState.js'
 
 // Ganador de un partido de eliminatorias. Solo importa el ganador, no los goles.
 // Prioridad: el equipo que la fuente marca como avanzado (incl. penales) → más goles.
@@ -38,11 +38,10 @@ function byPair(updates) {
 // Además captura estado/fecha/minuto/marcador de cada cruce (para mostrarlos en el cuadro como
 // en Home), lo que NO afecta puntos. Persiste elimination_matches ANTES de recalcular y dispara
 // UNA pasada de recálculo solo cuando cambió algún ganador.
-export async function applyKnockout(updates, store = storage) {
+export async function applyKnockout(updates, store = storage, now = Date.now()) {
   const elim = (await store.get('elimination_matches')) || []
   // Guard anti-pisado: read vacío (fallo transitorio) no debe borrar el cuadro compartido.
   if (elim.length === 0) return { resolved: [] }
-  if (!updates || updates.length === 0) return { resolved: [] }
 
   const realById = new Map(elim.map((m) => [m.id, m.ganador]))
   const idx = byPair(updates)
@@ -102,6 +101,16 @@ export async function applyKnockout(updates, store = storage) {
       rec.minuto = minuto
       rec.resultadoA = resultadoA
       rec.resultadoB = resultadoB
+      metaChanged = true
+    }
+  }
+
+  // Red de seguridad: un cruce no puede quedar "en vivo" para siempre si la fuente se cuelga
+  // en un estado live viejo o deja de reportarlo. Pasado el margen KO desde el kickoff, se da
+  // por finalizado (sin tocar el ganador: si quedó null se resolverá cuando llegue el AP/FT).
+  for (const m of elim) {
+    if (m.estado === 'en_vivo' && m.fecha && Date.parse(m.fecha) + KO_MAX_MATCH_MS < now) {
+      m.estado = 'finalizado'
       metaChanged = true
     }
   }
